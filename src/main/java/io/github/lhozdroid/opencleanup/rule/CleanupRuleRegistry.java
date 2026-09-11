@@ -296,7 +296,7 @@ public final class CleanupRuleRegistry {
             }
             if (rule == null) {
                 throw new IllegalArgumentException(
-                        "Unknown or not-yet-implemented cleanup rule: " + configuration.getId());
+                        "Unknown cleanup rule: " + configuration.getId());
             }
             add(selected, rule, configuration);
         }
