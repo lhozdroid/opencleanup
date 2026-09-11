@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "112-java-maven-plugins": {
+      "source": "jabrena/plinth",
+      "sourceType": "github",
+      "skillPath": "skills/112-java-maven-plugins/SKILL.md",
+      "computedHash": "0acfd740ee641a7fa73efb684a8263557ac38339e80e09a150864ab9f0fd01d1"
+    },
+    "java-code-review": {
+      "source": "decebals/claude-code-java",
+      "sourceType": "github",
+      "skillPath": "skills/java-code-review/SKILL.md",
+      "computedHash": "ef97ae3ac701e0dc10939e0d7298be4475ddcb8cb4f30d0b11c3c466d63043d6"
+    },
+    "java-coding-standards": {
+      "source": "affaan-m/ecc",
+      "sourceType": "github",
+      "skillPath": "skills/java-coding-standards/SKILL.md",
+      "computedHash": "c45cf8f0b87d44804e582fe0d103e154214961bcae4c5e1cb473d2f20d529096"
+    },
+    "java-docs": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/java-docs/SKILL.md",
+      "computedHash": "76cf49efcd6e99d95031c78e56615dbaf641a756e852acf7e87f9197dfab43e0"
+    }
+  }
+}

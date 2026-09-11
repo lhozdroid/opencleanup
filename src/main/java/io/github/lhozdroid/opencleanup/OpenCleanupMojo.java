@@ -71,7 +71,7 @@ public final class OpenCleanupMojo extends AbstractMojo {
         }
         try {
             return Charset.forName(encoding);
-        } catch (Exception exception) {
+        } catch (IllegalArgumentException exception) {
             throw new IllegalArgumentException("Unsupported source encoding: " + encoding, exception);
         }
     }

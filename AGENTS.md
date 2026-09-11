@@ -28,3 +28,10 @@
 - Validate changes with checks appropriate to their risk.
 - Report the result and any remaining limitations briefly.
 - Every Java method and constructor must have a formal Javadoc comment.
+
+## Skill governance
+
+- Use [AutoSkills](https://www.autoskills.sh/) to detect project technologies and review its recommendations with `npx autoskills --dry-run` before installation.
+- Use [Skills.sh](https://www.skills.sh/) to search for and install additional relevant skills with `npx skills find <query>` and `npx skills add <owner/repo> --skill <skill> -y --copy`.
+- Install new skills into the temporary `.agents/skills` directory, move accepted skills into `.codex/skills`, remove `.agents`, and preserve the generated root `skills-lock.json`.
+- Add only skills relevant to the current project and task; review their contents before use.

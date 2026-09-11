@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
@@ -128,7 +129,11 @@ public final class JavaSourceRewriter {
             state.appliedRules.addAll(appliedRules);
         } catch (IOException exception) {
             throw new UncheckedIOException("Could not rewrite " + path, exception);
-        } catch (Exception exception) {
+        } catch (BadLocationException exception) {
+            throw new UncheckedIOException(
+                    "Could not rewrite " + path,
+                    new IOException("Could not apply source edits", exception));
+        } catch (RuntimeException exception) {
             throw new UncheckedIOException(new IOException("Could not rewrite " + path, exception));
         }
     }
