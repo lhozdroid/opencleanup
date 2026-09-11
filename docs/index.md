@@ -1,0 +1,37 @@
+# OpenCleanup documentation
+
+OpenCleanup is a planned Maven plugin for applying Java source rewrites during a Maven build. Its rule catalog follows the cleanup capabilities exposed by Eclipse JDT, while the selected rules and their options are configured in `pom.xml`.
+
+This workspace is currently in the documentation and design phase. The examples below describe the intended configuration contract; they are not yet implemented plugin parameters.
+
+## Documentation map
+
+### Plugin configuration
+
+- [Maven configuration](configuration.md) — proposed POM structure, rule selection, options, source scope, and safety expectations.
+
+### Cleanup rule groups
+
+Each page maps to one cleanup configuration section from Eclipse JDT. The individual entries in each page are the planned selectable rules.
+
+- [Code style](rules/code-style.md)
+- [Java features](rules/java-features.md)
+- [Source fixing](rules/source-fixing.md)
+- [Performance](rules/performance.md)
+- [Member accesses](rules/member-accesses.md)
+- [Unnecessary code](rules/unnecessary-code.md)
+- [Missing code](rules/missing-code.md)
+- [Code organizing](rules/code-organizing.md)
+- [Duplicate code](rules/duplicate-code.md)
+
+## Design principles
+
+- A build must apply only the rules selected in the POM.
+- Rule options must be explicit and reviewable in source control.
+- Rewrites must preserve valid Java syntax and avoid changing behavior unless the selected rule intentionally requests a semantic modernization.
+- Java-version-sensitive rules must be guarded by the project's configured source level.
+- The plugin should report which files and rules changed so rewrites are visible in CI.
+
+## Eclipse reference
+
+The rule groups are based on the [Eclipse JDT Clean Up preference page](https://help.eclipse.org/latest/topic/org.eclipse.jdt.doc.user/reference/preferences/java/codestyle/ref-preferences-cleanup.htm) and the corresponding [JDT cleanup extension point](https://help.eclipse.org/latest/topic/org.eclipse.jdt.doc.isv/reference/extension-points/org_eclipse_jdt_ui_cleanUps.html).
