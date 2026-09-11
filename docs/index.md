@@ -41,6 +41,7 @@ Each page maps to one cleanup configuration section from Eclipse JDT. The indivi
 - `returns.useless` removes a final empty return from a void method.
 - `continues.useless` removes final unlabeled continues from while-style loops.
 - `imports.organize` orders normal and static imports deterministically.
+- `control-statements.else-if` joins an `else` block containing one `if` statement.
 - Wildcard imports are retained conservatively.
 - The `unnecessary-code` group can enable the implemented rule through its option.
 
