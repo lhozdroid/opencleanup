@@ -9,7 +9,7 @@ These rules organize source layout and whitespace. Formatting behavior should be
 | `format.source` | Format source using the selected formatter profile. | `true` or `false` |
 | `format.trailing-whitespace` | Remove trailing whitespace. | `all` or `ignore-empty-lines` |
 | `format.indentation` | Correct indentation. | `true` or `false` |
-| `imports.organize` | Organize imports using the configured import order. | `true` or `false` |
+| `imports.organize` | Organize imports using deterministic normal-then-static ordering. | Implemented; `true` or `false` |
 | `members.sort` | Sort members using the configured member order. | `true` or `false` |
 
 Formatting, import organization, and member sorting can create broad diffs. The plugin should make each operation independently selectable and should report the formatter and ordering configuration used.

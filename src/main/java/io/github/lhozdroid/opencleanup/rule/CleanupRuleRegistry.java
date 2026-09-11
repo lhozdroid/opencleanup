@@ -25,7 +25,8 @@ public final class CleanupRuleRegistry {
                 UselessReturnRule.ID, new UselessReturnRule(),
                 RedundantSuperCallRule.ID, new RedundantSuperCallRule(),
                 DoubleNegationRule.ID, new DoubleNegationRule(),
-                UselessContinueRule.ID, new UselessContinueRule());
+                UselessContinueRule.ID, new UselessContinueRule(),
+                OrganizeImportsRule.ID, new OrganizeImportsRule());
     }
 
     /**
