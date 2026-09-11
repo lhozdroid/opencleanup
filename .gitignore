@@ -2,3 +2,5 @@ target/
 .idea/
 .codex/
 *.iml
+central.xml
+/setup-central-secrets.sh
