@@ -24,17 +24,26 @@ class CleanupRuleRegistryTest {
                 "performance", BooleanLiteralRule.ID);
         RuleConfiguration sourceFixing = configuration(
                 "source-fixing", InvertEqualsRule.ID);
+        RuleConfiguration javaFeatures = configuration(
+                "java-features", InstanceofPatternMatchingRule.ID);
         RuleConfiguration unnecessaryCode = configuration(
                 "unnecessary-code", DoubleNegationRule.ID);
 
         List<CleanupRuleRegistry.ConfiguredRule> rules = new CleanupRuleRegistry()
-                .resolve(List.of(codeStyle, codeOrganizing, performance, sourceFixing, unnecessaryCode));
+                .resolve(List.of(
+                        codeStyle,
+                        codeOrganizing,
+                        performance,
+                        sourceFixing,
+                        javaFeatures,
+                        unnecessaryCode));
 
         assertEquals(List.of(
                 ElseIfRule.ID,
                 OrganizeImportsRule.ID,
                 BooleanLiteralRule.ID,
                 InvertEqualsRule.ID,
+                InstanceofPatternMatchingRule.ID,
                 DoubleNegationRule.ID),
                 rules.stream().map(configured -> configured.rule().id()).toList());
     }

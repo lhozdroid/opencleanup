@@ -27,7 +27,7 @@ Rules are opt-in unless a future release defines a named preset. A rule may be e
 
 The coordinates in this example are placeholders. They are intentionally not presented as published coordinates.
 
-Implemented rules can be selected directly by their IDs, or through their supported Eclipse-style groups. The current group mappings are `unnecessary-code`, `code-organizing`, `code-style`, `performance`, and `source-fixing`; group options use the same IDs as the corresponding direct rules.
+Implemented rules can be selected directly by their IDs, or through their supported Eclipse-style groups. The current group mappings are `unnecessary-code`, `code-organizing`, `code-style`, `java-features`, `performance`, and `source-fixing`; group options use the same IDs as the corresponding direct rules.
 
 ## Proposed configuration model
 

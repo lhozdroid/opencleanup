@@ -7,7 +7,7 @@ These rules fix source patterns that are commonly reported as questionable or de
 | Rule id | Rewrite |
 | --- | --- |
 | `comparisons.invert-equals` | Put a stable non-null expression on the left side of an equality comparison where safe. Implemented. |
-| `comparisons.standard` | Normalize equivalent comparison expressions to the standard form. |
+| `comparisons.standard` | Normalize equivalent comparison expressions to the standard form. Implemented for literal-left relational comparisons. |
 | `bitwise.check-sign` | Correct or simplify bitwise conditional expressions when the sign check is equivalent. |
 | `deprecated.replace-method` | Replace supported deprecated method calls with their recommended alternatives. |
 | `deprecated.replace-field` | Replace supported deprecated fields with their recommended alternatives. |

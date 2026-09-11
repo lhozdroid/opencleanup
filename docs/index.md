@@ -48,8 +48,14 @@ Each page maps to one cleanup configuration section from Eclipse JDT. The indivi
 - `negation.push-down` applies a conservative De Morgan rewrite.
 - `arrays.initializer` removes redundant local array creation syntax.
 - `semicolons.redundant` removes standalone empty statements from blocks.
+- `if.embedded` combines a safe nested `if` into a short-circuit condition.
+- `returns.expression` simplifies direct boolean conditional returns.
+- `expressions.parentheses` removes parentheses around simple expressions in safe contexts.
+- `control-statements.blocks` adds blocks around non-block control bodies.
+- `instanceof.pattern-matching` converts a matching cast declaration to a pattern variable.
+- `comparisons.standard` places numeric and character literals on the right of relational comparisons.
 - Wildcard imports are retained conservatively.
-- The `unnecessary-code`, `code-organizing`, `code-style`, `performance`, and `source-fixing` groups can enable implemented rules through their options.
+- The `unnecessary-code`, `code-organizing`, `code-style`, `java-features`, `performance`, and `source-fixing` groups can enable implemented rules through their options.
 
 ## Eclipse reference
 

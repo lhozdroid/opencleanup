@@ -7,7 +7,7 @@ These rules modernize Java code by using language features or library APIs avail
 | Rule id | Rewrite | Java level / options |
 | --- | --- | --- |
 | `modules.use-module-imports` | Use module-aware imports where applicable. | Java 25+ |
-| `instanceof.pattern-matching` | Use pattern variables with `instanceof`. | Java 16+ |
+| `instanceof.pattern-matching` | Use pattern variables with `instanceof`. | Implemented for matching first declarations; Java 16+ |
 | `instanceof.to-switch` | Convert eligible pattern checks to `switch`. | Java 21+ |
 | `switch.expressions` | Convert eligible switch statements to switch expressions. | Java 14+ |
 | `variable-declarations.var` | Use `var` for eligible local declarations. | Java 10+ |

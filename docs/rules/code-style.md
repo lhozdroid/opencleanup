@@ -6,13 +6,13 @@ These rules normalize control-flow, expressions, literals, variable declarations
 
 | Rule id | Rewrite | Options |
 | --- | --- | --- |
-| `control-statements.blocks` | Add or remove blocks around control statements. | `always`, `jdt-style`, `never` |
+| `control-statements.blocks` | Add or remove blocks around control statements. | Implemented for `always`; `jdt-style`, `never` planned |
 | `control-statements.else-if` | Join an `else` block containing an `if` into `else if`. | Implemented; `true` or `false` |
 | `control-statements.simplify-boolean-if-else` | Simplify boolean-producing `if`/`else` statements. | Implemented; `true` or `false` |
 | `control-statements.reduce-indentation` | Reduce avoidable nesting in control flow. | `true` or `false` |
 | `control-statements.use-switch` | Replace eligible conditional chains with `switch`. | `true` or `false` |
 | `control-statements.use-add-all` | Use bulk collection operations where equivalent. | `true` or `false` |
-| `expressions.parentheses` | Add or remove optional parentheses. | `always` or `never` |
+| `expressions.parentheses` | Add or remove optional parentheses. | Implemented for safe removal; `always` planned |
 | `expressions.extract-increment` | Move increment expressions to a dedicated statement when appropriate. | `true` or `false` |
 | `expressions.pull-up-assignment` | Move an assignment out of a conditional expression when safe. | `true` or `false` |
 | `expressions.instanceof` | Simplify eligible `instanceof` expressions. | `true` or `false` |
