@@ -11,7 +11,7 @@ These rules replace source patterns with forms that can reduce allocations, repe
 | `classes.static-inner` | Make an inner class static when it does not need an enclosing instance. |
 | `strings.string-builder` | Use `StringBuilder` for eligible concatenation patterns. |
 | `strings.plain-replacement` | Use plain replacement APIs when a regular expression is not needed. |
-| `strings.is-blank` | Use `String.isBlank` for eligible blank checks. |
+| `strings.is-blank` | Use `String.isBlank` for eligible blank checks. Implemented for exact simple-name `trim().isEmpty()` calls. |
 | `operators.lazy-logical` | Use short-circuit logical operators when equivalent. |
 | `boxing.value-of` | Use `valueOf` instead of wrapper construction where supported. |
 | `boxing.primitive-comparison` | Compare primitive values without unnecessary wrapper operations. |

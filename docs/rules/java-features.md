@@ -21,7 +21,7 @@ These rules modernize Java code by using language features or library APIs avail
 | `hash.modernize` | Use modern hash construction APIs where equivalent. | Java 7+ |
 | `objects.equals` | Use `Objects.equals` for null-safe equality. | Java 7+ |
 | `system-properties.constants` | Replace supported system-property lookups with constants. | Java 7+ |
-| `loops.enhanced-for` | Convert eligible indexed loops to enhanced `for` loops. | Java 5+ |
+| `loops.enhanced-for` | Convert eligible indexed loops to enhanced `for` loops. | Implemented for conservative array/list loops; Java 5+ |
 | `boxing.autoboxing` | Use autoboxing where equivalent. | Java 5+ |
 | `boxing.unboxing` | Use unboxing where equivalent. | Java 5+ |
 

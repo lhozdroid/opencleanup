@@ -54,6 +54,12 @@ Each page maps to one cleanup configuration section from Eclipse JDT. The indivi
 - `control-statements.blocks` adds blocks around non-block control bodies.
 - `instanceof.pattern-matching` converts a matching cast declaration to a pattern variable.
 - `comparisons.standard` places numeric and character literals on the right of relational comparisons.
+- `expressions.extract-increment` extracts direct increments from local declarations.
+- `number-literals.suffix` normalizes lowercase numeric literal suffixes.
+- `modifiers.redundant` removes syntax-guaranteed redundant interface modifiers.
+- `strings.redundant-substring-argument` removes a redundant string length argument.
+- `loops.enhanced-for` converts a conservative index loop to an enhanced `for` loop.
+- `strings.is-blank` converts an exact `trim().isEmpty()` shape to `isBlank()`.
 - Wildcard imports are retained conservatively.
 - The `unnecessary-code`, `code-organizing`, `code-style`, `java-features`, `performance`, and `source-fixing` groups can enable implemented rules through their options.
 

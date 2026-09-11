@@ -13,10 +13,10 @@ These rules normalize control-flow, expressions, literals, variable declarations
 | `control-statements.use-switch` | Replace eligible conditional chains with `switch`. | `true` or `false` |
 | `control-statements.use-add-all` | Use bulk collection operations where equivalent. | `true` or `false` |
 | `expressions.parentheses` | Add or remove optional parentheses. | Implemented for safe removal; `always` planned |
-| `expressions.extract-increment` | Move increment expressions to a dedicated statement when appropriate. | `true` or `false` |
+| `expressions.extract-increment` | Move increment expressions to a dedicated statement when appropriate. | Implemented for direct local declarations |
 | `expressions.pull-up-assignment` | Move an assignment out of a conditional expression when safe. | `true` or `false` |
 | `expressions.instanceof` | Simplify eligible `instanceof` expressions. | `true` or `false` |
-| `number-literals.suffix` | Normalize numeric literal suffixes. | `true` or `false` |
+| `number-literals.suffix` | Normalize numeric literal suffixes. | Implemented for canonical uppercase suffixes |
 | `variable-declarations.final` | Add `final` to selected declarations. | `fields`, `parameters`, `locals` |
 | `functional-interfaces.lambda-method-reference` | Simplify eligible lambda and method-reference syntax. | `true` or `false` |
 

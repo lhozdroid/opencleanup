@@ -44,7 +44,13 @@ public final class CleanupRuleRegistry {
                 Map.entry(EmbeddedIfRule.ID, new EmbeddedIfRule()),
                 Map.entry(InstanceofPatternMatchingRule.ID, new InstanceofPatternMatchingRule()),
                 Map.entry(ParenthesesRule.ID, new ParenthesesRule()),
-                Map.entry(StandardizeComparisonRule.ID, new StandardizeComparisonRule()));
+                Map.entry(StandardizeComparisonRule.ID, new StandardizeComparisonRule()),
+                Map.entry(ExtractIncrementRule.ID, new ExtractIncrementRule()),
+                Map.entry(NumberLiteralSuffixRule.ID, new NumberLiteralSuffixRule()),
+                Map.entry(RedundantModifiersRule.ID, new RedundantModifiersRule()),
+                Map.entry(RedundantSubstringArgumentRule.ID, new RedundantSubstringArgumentRule()),
+                Map.entry(EnhancedForRule.ID, new EnhancedForRule()),
+                Map.entry(StringsIsBlankRule.ID, new StringsIsBlankRule()));
     }
 
     /**
@@ -73,6 +79,8 @@ public final class CleanupRuleRegistry {
                 addIfEnabled(selected, configuration, ArrayInitializerRule.ID);
                 addIfEnabled(selected, configuration, ConditionalReturnRule.ID);
                 addIfEnabled(selected, configuration, EmbeddedIfRule.ID);
+                addIfEnabled(selected, configuration, RedundantModifiersRule.ID);
+                addIfEnabled(selected, configuration, RedundantSubstringArgumentRule.ID);
                 continue;
             }
 
@@ -85,17 +93,21 @@ public final class CleanupRuleRegistry {
                 addIfOptionValue(selected, configuration, ControlStatementBlocksRule.ID, "always");
                 addIfEnabled(selected, configuration, ElseIfRule.ID);
                 addIfEnabled(selected, configuration, SimplifyBooleanIfElseRule.ID);
+                addIfEnabled(selected, configuration, ExtractIncrementRule.ID);
+                addIfEnabled(selected, configuration, NumberLiteralSuffixRule.ID);
                 addIfOptionValue(selected, configuration, ParenthesesRule.ID, "never");
                 continue;
             }
 
             if (JAVA_FEATURES_GROUP_ID.equals(configuration.getId())) {
                 addIfEnabled(selected, configuration, InstanceofPatternMatchingRule.ID);
+                addIfEnabled(selected, configuration, EnhancedForRule.ID);
                 continue;
             }
 
             if (PERFORMANCE_GROUP_ID.equals(configuration.getId())) {
                 addIfEnabled(selected, configuration, BooleanLiteralRule.ID);
+                addIfEnabled(selected, configuration, StringsIsBlankRule.ID);
                 continue;
             }
 

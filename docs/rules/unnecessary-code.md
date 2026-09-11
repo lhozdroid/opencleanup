@@ -10,7 +10,7 @@ These rules remove redundant code or simplify expressions without requiring a ne
 | `unused-code.private-members` | Remove unused private types, constructors, fields, methods, or method parameters. |
 | `unused-code.suppress-warnings` | Remove unnecessary `@SuppressWarnings` tokens. |
 | `casts.unnecessary` | Remove unnecessary casts. |
-| `strings.redundant-substring-argument` | Remove a redundant `substring` argument. |
+| `strings.redundant-substring-argument` | Remove a redundant `substring` argument. Implemented for stable simple-name receivers. |
 | `arrays.fill` | Use `Arrays.fill` where equivalent. |
 | `null-checks.evaluate-nullable` | Simplify an expression whose null check is unnecessary. |
 | `negation.push-down` | Push negation into an expression. Implemented conservatively. |
@@ -23,7 +23,7 @@ These rules remove redundant code or simplify expressions without requiring a ne
 | `collections.clone` | Simplify eligible collection cloning. |
 | `maps.clone` | Simplify eligible map cloning. |
 | `assignments.overridden` | Remove an assignment that is overwritten before use. |
-| `modifiers.redundant` | Remove redundant modifiers. |
+| `modifiers.redundant` | Remove redundant modifiers. Implemented for interface and annotation declarations. |
 | `if.embedded` | Restructure an embedded `if` when equivalent. Implemented for a conservative nested-if shape. |
 | `semicolons.redundant` | Remove redundant semicolons. Implemented for standalone block statements. |
 | `comparators.redundant` | Remove an unnecessary comparator. |
