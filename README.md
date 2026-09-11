@@ -14,6 +14,7 @@ The current implementation targets Java 21 and contains all 102 documented rule 
 - [Rule catalog](#rule-catalog)
 - [Execution and source scope](#execution-and-source-scope)
 - [Rewrite behavior and safety](#rewrite-behavior-and-safety)
+- [Publishing](#publishing)
 - [Documentation](#documentation)
 
 ## Quick start
@@ -258,6 +259,14 @@ The goal runs in `process-sources`, before compilation. Rewrites happen in place
 - Rules that add declarations or remove members are opt-in and conservative, but they should still be reviewed like any source modification.
 - A selected rule may report no change when its preconditions are not satisfied.
 - The plugin does not guarantee that all rewrites are semantically equivalent in every project; compile and test the rewritten source.
+
+## Publishing
+
+The project is licensed under the [MIT License](LICENSE). Maven Central
+release configuration is documented in [Publishing OpenCleanup](docs/publishing.md).
+
+The release workflow publishes a GitHub release through Maven Central after
+the required Central credentials and GPG signing secrets are configured.
 
 ## Documentation
 
