@@ -21,7 +21,7 @@ These rules replace source patterns with forms that can reduce allocations, repe
 | `regular-expressions.precompile` | Precompile a regular expression reused in one scope. |
 | `strings.buffer-to-builder` | Replace `StringBuffer` with `StringBuilder` when synchronization is not required. |
 | `strings.no-string-creation` | Avoid unnecessary intermediate `String` creation. |
-| `booleans.literal` | Simplify boolean literal expressions. |
+| `booleans.literal` | Simplify boolean literal expressions. Implemented. |
 
 ## Safety
 

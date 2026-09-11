@@ -11,6 +11,10 @@ import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
  */
 public final class CleanupRuleRegistry {
 
+    private static final String CODE_ORGANIZING_GROUP_ID = "code-organizing";
+    private static final String CODE_STYLE_GROUP_ID = "code-style";
+    private static final String PERFORMANCE_GROUP_ID = "performance";
+    private static final String SOURCE_FIXING_GROUP_ID = "source-fixing";
     private static final String UNNECESSARY_CODE_GROUP_ID = "unnecessary-code";
 
     private final Map<String, CleanupRule> rules;
@@ -19,15 +23,21 @@ public final class CleanupRuleRegistry {
      * Creates a registry containing the cleanup rules implemented by the plugin.
      */
     public CleanupRuleRegistry() {
-        this.rules = Map.of(
-                UnusedImportsRule.ID, new UnusedImportsRule(),
-                BooleanValueRatherThanComparisonRule.ID, new BooleanValueRatherThanComparisonRule(),
-                UselessReturnRule.ID, new UselessReturnRule(),
-                RedundantSuperCallRule.ID, new RedundantSuperCallRule(),
-                DoubleNegationRule.ID, new DoubleNegationRule(),
-                UselessContinueRule.ID, new UselessContinueRule(),
-                OrganizeImportsRule.ID, new OrganizeImportsRule(),
-                ElseIfRule.ID, new ElseIfRule());
+        this.rules = Map.ofEntries(
+                Map.entry(UnusedImportsRule.ID, new UnusedImportsRule()),
+                Map.entry(BooleanValueRatherThanComparisonRule.ID, new BooleanValueRatherThanComparisonRule()),
+                Map.entry(UselessReturnRule.ID, new UselessReturnRule()),
+                Map.entry(RedundantSuperCallRule.ID, new RedundantSuperCallRule()),
+                Map.entry(DoubleNegationRule.ID, new DoubleNegationRule()),
+                Map.entry(UselessContinueRule.ID, new UselessContinueRule()),
+                Map.entry(OrganizeImportsRule.ID, new OrganizeImportsRule()),
+                Map.entry(ElseIfRule.ID, new ElseIfRule()),
+                Map.entry(SimplifyBooleanIfElseRule.ID, new SimplifyBooleanIfElseRule()),
+                Map.entry(BooleanLiteralRule.ID, new BooleanLiteralRule()),
+                Map.entry(InvertEqualsRule.ID, new InvertEqualsRule()),
+                Map.entry(NegationPushDownRule.ID, new NegationPushDownRule()),
+                Map.entry(RedundantSemicolonRule.ID, new RedundantSemicolonRule()),
+                Map.entry(ArrayInitializerRule.ID, new ArrayInitializerRule()));
     }
 
     /**
@@ -45,9 +55,36 @@ public final class CleanupRuleRegistry {
             }
 
             if (UNNECESSARY_CODE_GROUP_ID.equals(configuration.getId())) {
-                if (configuration.isOptionEnabled(UnusedImportsRule.ID)) {
-                    add(selected, rules.get(UnusedImportsRule.ID), configuration);
-                }
+                addIfEnabled(selected, configuration, UnusedImportsRule.ID);
+                addIfEnabled(selected, configuration, BooleanValueRatherThanComparisonRule.ID);
+                addIfEnabled(selected, configuration, DoubleNegationRule.ID);
+                addIfEnabled(selected, configuration, RedundantSuperCallRule.ID);
+                addIfEnabled(selected, configuration, UselessReturnRule.ID);
+                addIfEnabled(selected, configuration, UselessContinueRule.ID);
+                addIfEnabled(selected, configuration, NegationPushDownRule.ID);
+                addIfEnabled(selected, configuration, RedundantSemicolonRule.ID);
+                addIfEnabled(selected, configuration, ArrayInitializerRule.ID);
+                continue;
+            }
+
+            if (CODE_ORGANIZING_GROUP_ID.equals(configuration.getId())) {
+                addIfEnabled(selected, configuration, OrganizeImportsRule.ID);
+                continue;
+            }
+
+            if (CODE_STYLE_GROUP_ID.equals(configuration.getId())) {
+                addIfEnabled(selected, configuration, ElseIfRule.ID);
+                addIfEnabled(selected, configuration, SimplifyBooleanIfElseRule.ID);
+                continue;
+            }
+
+            if (PERFORMANCE_GROUP_ID.equals(configuration.getId())) {
+                addIfEnabled(selected, configuration, BooleanLiteralRule.ID);
+                continue;
+            }
+
+            if (SOURCE_FIXING_GROUP_ID.equals(configuration.getId())) {
+                addIfEnabled(selected, configuration, InvertEqualsRule.ID);
                 continue;
             }
 
@@ -70,6 +107,22 @@ public final class CleanupRuleRegistry {
      */
     private void add(Map<String, ConfiguredRule> selected, CleanupRule rule, RuleConfiguration configuration) {
         selected.putIfAbsent(rule.id(), new ConfiguredRule(rule, configuration));
+    }
+
+    /**
+     * Adds a known rule when its group option is enabled.
+     *
+     * @param selected the selected rules indexed by rule identifier
+     * @param configuration the group configuration containing the option
+     * @param ruleId the rule identifier represented by the option
+     */
+    private void addIfEnabled(
+            Map<String, ConfiguredRule> selected,
+            RuleConfiguration configuration,
+            String ruleId) {
+        if (configuration.isOptionEnabled(ruleId)) {
+            add(selected, rules.get(ruleId), configuration);
+        }
     }
 
     public record ConfiguredRule(CleanupRule rule, RuleConfiguration configuration) {

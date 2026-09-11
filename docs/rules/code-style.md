@@ -8,7 +8,7 @@ These rules normalize control-flow, expressions, literals, variable declarations
 | --- | --- | --- |
 | `control-statements.blocks` | Add or remove blocks around control statements. | `always`, `jdt-style`, `never` |
 | `control-statements.else-if` | Join an `else` block containing an `if` into `else if`. | Implemented; `true` or `false` |
-| `control-statements.simplify-boolean-if-else` | Simplify boolean-producing `if`/`else` statements. | `true` or `false` |
+| `control-statements.simplify-boolean-if-else` | Simplify boolean-producing `if`/`else` statements. | Implemented; `true` or `false` |
 | `control-statements.reduce-indentation` | Reduce avoidable nesting in control flow. | `true` or `false` |
 | `control-statements.use-switch` | Replace eligible conditional chains with `switch`. | `true` or `false` |
 | `control-statements.use-add-all` | Use bulk collection operations where equivalent. | `true` or `false` |

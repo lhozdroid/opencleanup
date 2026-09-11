@@ -42,8 +42,14 @@ Each page maps to one cleanup configuration section from Eclipse JDT. The indivi
 - `continues.useless` removes final unlabeled continues from while-style loops.
 - `imports.organize` orders normal and static imports deterministically.
 - `control-statements.else-if` joins an `else` block containing one `if` statement.
+- `control-statements.simplify-boolean-if-else` simplifies opposite boolean returns.
+- `booleans.literal` folds expressions made only from boolean literals.
+- `comparisons.invert-equals` places the non-null side first in null comparisons.
+- `negation.push-down` applies a conservative De Morgan rewrite.
+- `arrays.initializer` removes redundant local array creation syntax.
+- `semicolons.redundant` removes standalone empty statements from blocks.
 - Wildcard imports are retained conservatively.
-- The `unnecessary-code` group can enable the implemented rule through its option.
+- The `unnecessary-code`, `code-organizing`, `code-style`, `performance`, and `source-fixing` groups can enable implemented rules through their options.
 
 ## Eclipse reference
 
