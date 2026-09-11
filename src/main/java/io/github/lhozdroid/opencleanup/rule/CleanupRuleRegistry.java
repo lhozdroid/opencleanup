@@ -19,7 +19,9 @@ public final class CleanupRuleRegistry {
      * Creates a registry containing the cleanup rules implemented by the plugin.
      */
     public CleanupRuleRegistry() {
-        this.rules = Map.of(UnusedImportsRule.ID, new UnusedImportsRule());
+        this.rules = Map.of(
+                UnusedImportsRule.ID, new UnusedImportsRule(),
+                BooleanValueRatherThanComparisonRule.ID, new BooleanValueRatherThanComparisonRule());
     }
 
     /**
