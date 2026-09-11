@@ -27,6 +27,8 @@ Rules are opt-in unless a future release defines a named preset. A rule may be e
 
 The coordinates in this example are placeholders. They are intentionally not presented as published coordinates.
 
+The first implemented rule can be selected directly with `id="unused-code.imports"`, or through the `unnecessary-code` group as shown above.
+
 ## Proposed configuration model
 
 | Element | Meaning |

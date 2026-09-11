@@ -15,10 +15,20 @@ public final class CleanupRuleRegistry {
 
     private final Map<String, CleanupRule> rules;
 
+    /**
+     * Creates a registry containing the cleanup rules implemented by the plugin.
+     */
     public CleanupRuleRegistry() {
         this.rules = Map.of(UnusedImportsRule.ID, new UnusedImportsRule());
     }
 
+    /**
+     * Resolves enabled Maven configurations to unique executable rules.
+     *
+     * @param configurations the configured rule groups and rules
+     * @return the selected rules in configuration order
+     * @throws IllegalArgumentException when an enabled rule is not implemented
+     */
     public List<ConfiguredRule> resolve(List<RuleConfiguration> configurations) {
         Map<String, ConfiguredRule> selected = new LinkedHashMap<>();
         for (RuleConfiguration configuration : configurations) {
@@ -43,6 +53,13 @@ public final class CleanupRuleRegistry {
         return List.copyOf(selected.values());
     }
 
+    /**
+     * Adds a rule to the selected set unless it has already been selected.
+     *
+     * @param selected the selected rules indexed by rule identifier
+     * @param rule the rule to add
+     * @param configuration the configuration associated with the rule
+     */
     private void add(Map<String, ConfiguredRule> selected, CleanupRule rule, RuleConfiguration configuration) {
         selected.putIfAbsent(rule.id(), new ConfiguredRule(rule, configuration));
     }

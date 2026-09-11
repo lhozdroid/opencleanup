@@ -6,7 +6,7 @@ These rules remove redundant code or simplify expressions without requiring a ne
 
 | Rule id | Rewrite |
 | --- | --- |
-| `unused-code.imports` | Remove unused imports. |
+| `unused-code.imports` | Remove unused single-type and single-static imports; wildcard imports are retained conservatively. |
 | `unused-code.private-members` | Remove unused private types, constructors, fields, methods, or method parameters. |
 | `unused-code.suppress-warnings` | Remove unnecessary `@SuppressWarnings` tokens. |
 | `casts.unnecessary` | Remove unnecessary casts. |

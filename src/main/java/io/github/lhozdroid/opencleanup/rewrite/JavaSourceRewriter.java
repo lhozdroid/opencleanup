@@ -30,10 +30,25 @@ public final class JavaSourceRewriter {
 
     private final CleanupRuleRegistry ruleRegistry;
 
+    /**
+     * Creates a source rewriter backed by a cleanup rule registry.
+     *
+     * @param ruleRegistry the registry used to resolve configured rules
+     */
     public JavaSourceRewriter(CleanupRuleRegistry ruleRegistry) {
         this.ruleRegistry = ruleRegistry;
     }
 
+    /**
+     * Rewrites Java files below the supplied source roots.
+     *
+     * @param sourceRoots directories containing Java source files
+     * @param charset charset used to read and write source files
+     * @param configurations configured rule groups and rules
+     * @return a summary of visited and changed files
+     * @throws IOException if a source file cannot be read or written
+     * @throws RewriteException if source parsing or AST rewriting fails
+     */
     public RewriteReport rewrite(
             Collection<Path> sourceRoots,
             Charset charset,
@@ -57,6 +72,14 @@ public final class JavaSourceRewriter {
         return state.toReport();
     }
 
+    /**
+     * Applies all resolved rules to one Java source file.
+     *
+     * @param path the Java source file
+     * @param charset charset used to read and write the file
+     * @param configuredRules rules selected for this execution
+     * @param state mutable execution counters and results
+     */
     private void rewriteFile(
             Path path,
             Charset charset,
@@ -98,6 +121,12 @@ public final class JavaSourceRewriter {
         }
     }
 
+    /**
+     * Parses source text as a Java 21 compilation unit.
+     *
+     * @param source the Java source text
+     * @return the parsed compilation unit
+     */
     private CompilationUnit parse(String source) {
         ASTParser parser = ASTParser.newParser(AST.JLS21);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -107,6 +136,12 @@ public final class JavaSourceRewriter {
         return (CompilationUnit) parser.createAST(null);
     }
 
+    /**
+     * Checks whether a path is a regular Java source file.
+     *
+     * @param path the path to check
+     * @return {@code true} when the path points to a file ending in {@code .java}
+     */
     private boolean isJavaSource(Path path) {
         return Files.isRegularFile(path) && path.getFileName().toString().endsWith(".java");
     }
@@ -118,6 +153,11 @@ public final class JavaSourceRewriter {
         private final List<Path> changedFiles = new java.util.ArrayList<>();
         private final Set<String> appliedRules = new LinkedHashSet<>();
 
+        /**
+         * Builds the immutable report for this execution.
+         *
+         * @return the rewrite execution report
+         */
         private RewriteReport toReport() {
             return RewriteReport.builder()
                     .filesVisited(filesVisited)

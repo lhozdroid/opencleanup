@@ -27,3 +27,4 @@
 - Prefer the simplest solution; avoid premature abstractions, unrelated refactors, and speculative features.
 - Validate changes with checks appropriate to their risk.
 - Report the result and any remaining limitations briefly.
+- Every Java method and constructor must have a formal Javadoc comment.

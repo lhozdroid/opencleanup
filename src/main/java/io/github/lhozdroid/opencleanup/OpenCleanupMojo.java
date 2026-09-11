@@ -35,6 +35,11 @@ public final class OpenCleanupMojo extends AbstractMojo {
     @Parameter
     private List<RuleConfiguration> rules = new ArrayList<>();
 
+    /**
+     * Applies the enabled cleanup rules to the project's compile source roots.
+     *
+     * @throws MojoExecutionException if source rewriting fails or the configuration is invalid
+     */
     @Override
     public void execute() throws MojoExecutionException {
         try {
@@ -53,6 +58,12 @@ public final class OpenCleanupMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * Resolves the source encoding configured on the Maven project.
+     *
+     * @return the configured source charset, or UTF-8 when no encoding is configured
+     * @throws IllegalArgumentException if the configured encoding is unsupported
+     */
     private Charset sourceCharset() {
         String encoding = project.getProperties().getProperty("project.build.sourceEncoding");
         if (encoding == null || encoding.isBlank()) {

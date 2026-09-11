@@ -24,11 +24,24 @@ public final class UnusedImportsRule implements CleanupRule {
 
     public static final String ID = "unused-code.imports";
 
+    /**
+     * Returns the stable identifier for unused-import cleanup.
+     *
+     * @return the unused-import rule identifier
+     */
     @Override
     public String id() {
         return ID;
     }
 
+    /**
+     * Records removal edits for unused non-wildcard imports.
+     *
+     * @param compilationUnit the parsed Java compilation unit
+     * @param rewrite the rewrite collecting source edits
+     * @param configuration the Maven configuration for this rule
+     * @return {@code true} when at least one import is scheduled for removal
+     */
     @Override
     public boolean apply(
             CompilationUnit compilationUnit,
@@ -55,14 +68,32 @@ public final class UnusedImportsRule implements CleanupRule {
         return changed;
     }
 
+    /**
+     * Collects simple names used outside import declarations.
+     *
+     * @param compilationUnit the parsed Java compilation unit
+     * @return the simple names found in source code
+     */
     private Set<String> findUsedNames(CompilationUnit compilationUnit) {
         Set<String> usedNames = new HashSet<>();
         compilationUnit.accept(new ASTVisitor() {
+            /**
+             * Skips import declarations so their own names are not counted as uses.
+             *
+             * @param node the AST node being visited
+             * @return {@code false} for imports, otherwise {@code true}
+             */
             @Override
             public boolean preVisit2(ASTNode node) {
                 return !(node instanceof ImportDeclaration);
             }
 
+            /**
+             * Records a simple name encountered in source code.
+             *
+             * @param node the visited simple-name node
+             * @return {@code true} to continue visiting child nodes
+             */
             @Override
             public boolean visit(SimpleName node) {
                 usedNames.add(node.getIdentifier());

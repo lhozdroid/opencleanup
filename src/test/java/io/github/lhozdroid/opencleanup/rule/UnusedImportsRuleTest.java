@@ -20,6 +20,11 @@ class UnusedImportsRuleTest {
     @TempDir
     Path tempDirectory;
 
+    /**
+     * Verifies that an unused single-type import is removed and reported.
+     *
+     * @throws Exception if the temporary source file cannot be created or rewritten
+     */
     @Test
     void removesUnusedSingleTypeImport() throws Exception {
         Path sourceFile = tempDirectory.resolve("Example.java");
@@ -45,6 +50,11 @@ class UnusedImportsRuleTest {
         assertEquals(List.of(sourceFile), report.getChangedFiles());
     }
 
+    /**
+     * Verifies that wildcard imports are retained by the conservative rule.
+     *
+     * @throws Exception if the temporary source file cannot be created or rewritten
+     */
     @Test
     void retainsWildcardImport() throws Exception {
         Path sourceFile = tempDirectory.resolve("Example.java");

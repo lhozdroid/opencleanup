@@ -2,7 +2,7 @@
 
 OpenCleanup is a planned Maven plugin for applying Java source rewrites during a Maven build. Its rule catalog follows the cleanup capabilities exposed by Eclipse JDT, while the selected rules and their options are configured in `pom.xml`.
 
-This workspace is currently in the documentation and design phase. The examples below describe the intended configuration contract; they are not yet implemented plugin parameters.
+The plugin is being implemented incrementally. The rule catalog pages distinguish implemented rules from planned rules.
 
 ## Documentation map
 
@@ -31,6 +31,12 @@ Each page maps to one cleanup configuration section from Eclipse JDT. The indivi
 - Rewrites must preserve valid Java syntax and avoid changing behavior unless the selected rule intentionally requests a semantic modernization.
 - Java-version-sensitive rules must be guarded by the project's configured source level.
 - The plugin should report which files and rules changed so rewrites are visible in CI.
+
+## Current implementation
+
+- `unused-code.imports` removes unused single-type and single-static imports.
+- Wildcard imports are retained conservatively.
+- The `unnecessary-code` group can enable the implemented rule through its option.
 
 ## Eclipse reference
 
