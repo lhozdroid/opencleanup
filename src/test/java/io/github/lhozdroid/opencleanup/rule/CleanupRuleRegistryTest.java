@@ -2,7 +2,9 @@ package io.github.lhozdroid.opencleanup.rule;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -57,6 +59,23 @@ class CleanupRuleRegistryTest {
         codeStyle.setEnabled(false);
 
         assertEquals(List.of(), new CleanupRuleRegistry().resolve(List.of(codeStyle)));
+    }
+
+    /**
+     * Verifies that the full documented catalog is present in the AST and source rule registries.
+     *
+     * @throws ReflectiveOperationException if the registry fields cannot be inspected
+     */
+    @Test
+    void registersCompleteRuleCatalog() throws ReflectiveOperationException {
+        CleanupRuleRegistry registry = new CleanupRuleRegistry();
+        Field astRules = CleanupRuleRegistry.class.getDeclaredField("rules");
+        Field sourceRules = CleanupRuleRegistry.class.getDeclaredField("sourceRules");
+        astRules.setAccessible(true);
+        sourceRules.setAccessible(true);
+
+        assertEquals(99, ((Map<?, ?>) astRules.get(registry)).size());
+        assertEquals(3, ((Map<?, ?>) sourceRules.get(registry)).size());
     }
 
     /**

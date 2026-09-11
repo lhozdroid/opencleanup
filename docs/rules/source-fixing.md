@@ -2,7 +2,7 @@
 
 These rules fix source patterns that are commonly reported as questionable or deprecated.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite |
 | --- | --- |
@@ -12,7 +12,7 @@ These rules fix source patterns that are commonly reported as questionable or de
 | `deprecated.replace-method` | Replace supported deprecated method calls with their recommended alternatives. |
 | `deprecated.replace-field` | Replace supported deprecated fields with their recommended alternatives. |
 
-All source-fixing rules are opt-in. Deprecated API replacements must use a maintained mapping and must not be applied when the replacement is unavailable on the project's effective class path.
+All source-fixing rules are opt-in. Deprecated API replacements use a fixed, documented mapping and are skipped when the replacement cannot be proven safe from syntax.
 
 ## Eclipse reference
 

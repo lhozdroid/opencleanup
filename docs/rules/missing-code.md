@@ -2,7 +2,7 @@
 
 These rules add source that Eclipse can derive from the type hierarchy or Java serialization conventions.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite | Options |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ These rules add source that Eclipse can derive from the type hierarchy or Java s
 | `serialization.serial-version-uid` | Add a missing `serialVersionUID`. | `generated` or `default` |
 | `methods.unimplemented` | Add method stubs for unimplemented methods. | `true` or `false` |
 
-Generated source must use a documented template and must not overwrite an existing declaration. These rules may be unavailable for save-action-style execution because they can create larger source changes.
+Generated source uses deterministic templates and never overwrites an existing declaration. Ambiguous type-hierarchy cases are left unchanged.
 
 ## Eclipse reference
 

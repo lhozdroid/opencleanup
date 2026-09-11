@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
+import io.github.lhozdroid.opencleanup.config.RuleOption;
 
 /**
  * Tests the safe add-blocks behavior for control statements.
@@ -113,11 +114,84 @@ class ControlStatementBlocksRuleTest {
     }
 
     /**
+     * Verifies the never mode removes only safe single-statement blocks.
+     *
+     * @throws Exception if the source cannot be parsed or rewritten
+     */
+    @Test
+    void removesSafeBlocksInNeverMode() throws Exception {
+        String original = """
+                class Example {
+                    void check(boolean condition) {
+                        if (condition) {
+                            first();
+                        }
+                        while (condition) {
+                            loop();
+                        }
+                    }
+
+                    void first() {
+                    }
+
+                    void loop() {
+                    }
+                }
+                """;
+
+        String rewritten = rewrite(original, "never");
+        String normalized = rewritten.replaceAll("\\s+", " ").trim();
+        assertTrue(normalized.contains("if (condition) first();"));
+        assertTrue(normalized.contains("while (condition) loop();"));
+    }
+
+    /**
+     * Verifies the JDT-style mode adds blocks only to multi-line bodies.
+     *
+     * @throws Exception if the source cannot be parsed or rewritten
+     */
+    @Test
+    void addsBlocksOnlyToMultiLineBodiesInJdtStyleMode() throws Exception {
+        String original = """
+                class Example {
+                    void check(boolean condition) {
+                        if (condition) first();
+                        if (condition) second(
+                                1);
+                    }
+
+                    void first() {
+                    }
+
+                    void second(int value) {
+                    }
+                }
+                """;
+
+        String rewritten = rewrite(original, "jdt-style");
+        String normalized = rewritten.replaceAll("\\s+", " ").trim();
+        assertTrue(normalized.contains("if (condition) first();"));
+        assertTrue(normalized.contains("if (condition) { second( 1); }"));
+    }
+
+    /**
      * Rewrites the temporary source with the control-statement blocks rule.
      *
      * @throws Exception if the source cannot be parsed or rewritten
      */
     private String rewrite(String source) throws Exception {
+        return rewrite(source, null);
+    }
+
+    /**
+     * Rewrites source with an optional control-statement block mode.
+     *
+     * @param source the Java source text
+     * @param mode the optional block mode
+     * @return the rewritten source text
+     * @throws Exception if the source cannot be parsed or rewritten
+     */
+    private String rewrite(String source, String mode) throws Exception {
         ASTParser parser = ASTParser.newParser(AST.JLS21);
         parser.setSource(source.toCharArray());
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -128,6 +202,12 @@ class ControlStatementBlocksRuleTest {
 
         RuleConfiguration configuration = new RuleConfiguration();
         configuration.setId(ControlStatementBlocksRule.ID);
+        if (mode != null) {
+            RuleOption option = new RuleOption();
+            option.setName(ControlStatementBlocksRule.ID);
+            option.setValue(mode);
+            configuration.setOptions(java.util.List.of(option));
+        }
         boolean changed = new ControlStatementBlocksRule().apply(compilationUnit, rewrite, configuration);
         if (!changed) {
             return source;

@@ -2,7 +2,7 @@
 
 These rules collapse repeated conditional expressions or control-flow blocks.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite |
 | --- | --- |
@@ -16,7 +16,7 @@ These rules collapse repeated conditional expressions or control-flow blocks.
 | `conditions.redundant-if` | Remove a redundant `if` condition. |
 | `conditions.pull-out-if` | Pull a shared condition out of an `if`/`else` structure. |
 
-These rewrites need strong control-flow equivalence checks. They should preserve comments, labels, fall-through behavior, and the order of side effects.
+These rewrites use conservative control-flow equivalence checks and preserve comments, labels, fall-through behavior, and the order of side effects where the syntax allows that proof.
 
 ## Eclipse reference
 

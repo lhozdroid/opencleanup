@@ -2,7 +2,7 @@
 
 These rules organize source layout and whitespace. Formatting behavior should be delegated to a defined formatter configuration rather than reimplemented independently in every rule.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite | Options |
 | --- | --- | --- |
@@ -12,7 +12,7 @@ These rules organize source layout and whitespace. Formatting behavior should be
 | `imports.organize` | Organize imports using deterministic normal-then-static ordering. | Implemented; `true` or `false` |
 | `members.sort` | Sort members using the configured member order. | `true` or `false` |
 
-Formatting, import organization, and member sorting can create broad diffs. The plugin should make each operation independently selectable and should report the formatter and ordering configuration used.
+Formatting, import organization, and member sorting can create broad diffs. Each operation is independently selectable and the rewrite report identifies the rules that changed a file.
 
 ## Eclipse reference
 

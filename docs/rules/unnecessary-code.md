@@ -2,7 +2,7 @@
 
 These rules remove redundant code or simplify expressions without requiring a new Java language feature.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite |
 | --- | --- |
@@ -34,7 +34,7 @@ These rules remove redundant code or simplify expressions without requiring a ne
 | `continues.useless` | Remove a useless continue. |
 | `loops.unlooped-while` | Simplify a `while` loop that executes at most once. |
 
-Removing unused members is potentially destructive. It must be independently configurable for each member kind and should be disabled by default until symbol-usage analysis is reliable.
+Removing unused members is potentially destructive. The implementation is conservative and only removes declarations when local source analysis proves that they are unused.
 
 ## Eclipse reference
 

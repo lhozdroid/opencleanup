@@ -54,6 +54,7 @@ public final class JavaSourceRewriter {
             Charset charset,
             List<RuleConfiguration> configurations) throws IOException, RewriteException {
         List<CleanupRuleRegistry.ConfiguredRule> configuredRules = ruleRegistry.resolve(configurations);
+        List<CleanupRuleRegistry.ConfiguredSourceRule> sourceRules = ruleRegistry.resolveSourceRules(configurations);
         RewriteState state = new RewriteState();
 
         for (Path sourceRoot : sourceRoots) {
@@ -62,7 +63,8 @@ public final class JavaSourceRewriter {
             }
             try (Stream<Path> paths = Files.walk(sourceRoot)) {
                 try {
-                    paths.filter(this::isJavaSource).forEach(path -> rewriteFile(path, charset, configuredRules, state));
+                    paths.filter(this::isJavaSource)
+                            .forEach(path -> rewriteFile(path, charset, configuredRules, sourceRules, state));
                 } catch (UncheckedIOException exception) {
                     throw exception.getCause();
                 }
@@ -78,19 +80,29 @@ public final class JavaSourceRewriter {
      * @param path the Java source file
      * @param charset charset used to read and write the file
      * @param configuredRules rules selected for this execution
+     * @param sourceRules source-level rules selected for this execution
      * @param state mutable execution counters and results
      */
     private void rewriteFile(
             Path path,
             Charset charset,
             List<CleanupRuleRegistry.ConfiguredRule> configuredRules,
+            List<CleanupRuleRegistry.ConfiguredSourceRule> sourceRules,
             RewriteState state) {
         try {
             state.filesVisited++;
-            String source = Files.readString(path, charset);
+            String originalSource = Files.readString(path, charset);
+            String source = originalSource;
+            Set<String> appliedRules = new LinkedHashSet<>();
+            for (CleanupRuleRegistry.ConfiguredSourceRule sourceRule : sourceRules) {
+                String rewrittenSource = sourceRule.rule().apply(source, sourceRule.configuration());
+                if (!source.equals(rewrittenSource)) {
+                    source = rewrittenSource;
+                    appliedRules.add(sourceRule.rule().id());
+                }
+            }
             CompilationUnit compilationUnit = parse(source);
             ASTRewrite rewrite = ASTRewrite.create(compilationUnit.getAST());
-            Set<String> appliedRules = new LinkedHashSet<>();
 
             for (CleanupRuleRegistry.ConfiguredRule configuredRule : configuredRules) {
                 if (configuredRule.rule().apply(compilationUnit, rewrite, configuredRule.configuration())) {
@@ -106,7 +118,7 @@ public final class JavaSourceRewriter {
             TextEdit edits = rewrite.rewriteAST(document, Map.of());
             edits.apply(document);
             String rewrittenSource = document.get();
-            if (source.equals(rewrittenSource)) {
+            if (originalSource.equals(rewrittenSource)) {
                 return;
             }
 

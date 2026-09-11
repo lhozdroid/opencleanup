@@ -2,11 +2,11 @@
 
 These rules modernize Java code by using language features or library APIs available at a specified Java release.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite | Java level / options |
 | --- | --- | --- |
-| `modules.use-module-imports` | Use module-aware imports where applicable. | Java 25+ |
+| `modules.use-module-imports` | Use module-aware imports where applicable. | Java 25+; recognized but skipped for Java 21 |
 | `instanceof.pattern-matching` | Use pattern variables with `instanceof`. | Implemented for matching first declarations; Java 16+ |
 | `instanceof.to-switch` | Convert eligible pattern checks to `switch`. | Java 21+ |
 | `switch.expressions` | Convert eligible switch statements to switch expressions. | Java 14+ |
@@ -27,7 +27,7 @@ These rules modernize Java code by using language features or library APIs avail
 
 ## Safety
 
-These transformations are language-level dependent. The plugin must read the project's effective Java source level and skip a rule when its target feature is unavailable. Rules that alter evaluation order or exception behavior need especially conservative preconditions.
+These transformations are language-level dependent. Rules use conservative syntax checks and leave unsupported or ambiguous source unchanged. The module-import rule is recognized but intentionally does not emit Java 25 syntax from this Java 21 plugin.
 
 ## Eclipse reference
 

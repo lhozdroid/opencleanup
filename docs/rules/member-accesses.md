@@ -2,7 +2,7 @@
 
 These rules make member access qualification consistent.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite | Options |
 | --- | --- | --- |
@@ -10,7 +10,7 @@ These rules make member access qualification consistent.
 | `member-accesses.non-static-methods` | Qualify non-static method access with `this`. | `always` or `when-necessary` |
 | `member-accesses.static-members` | Qualify static member access with its declaring type. | `true` or `false` |
 
-Qualification should not be added where it changes overload resolution or makes generated code invalid. The field and method settings are independent because Eclipse exposes separate controls.
+Qualification is skipped where it could change overload resolution, shadowing, inheritance, or generated-code validity. The field and method settings are independent because Eclipse exposes separate controls.
 
 ## Eclipse reference
 

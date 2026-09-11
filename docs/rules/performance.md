@@ -2,7 +2,7 @@
 
 These rules replace source patterns with forms that can reduce allocations, repeated work, or avoidable branching. They must only run when the rewrite is behaviorally safe.
 
-## Planned rules
+## Implemented rules
 
 | Rule id | Rewrite |
 | --- | --- |
@@ -25,7 +25,7 @@ These rules replace source patterns with forms that can reduce allocations, repe
 
 ## Safety
 
-Performance transformations can affect synchronization, allocation timing, evaluation order, or observable identity. The implementation must document and test each rule's preconditions before enabling it.
+Performance transformations can affect synchronization, allocation timing, evaluation order, or observable identity. Each implementation documents and tests its preconditions before making a rewrite.
 
 ## Eclipse reference
 
