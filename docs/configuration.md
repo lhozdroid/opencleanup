@@ -1,68 +1,365 @@
 # Maven configuration
 
-This page defines the proposed Maven-facing configuration for OpenCleanup. The final element names and defaults will be confirmed when the plugin implementation is started.
+This page is the authoritative guide to configuring the OpenCleanup Maven plugin. The plugin exposes one goal, `rewrite`, and one user-configurable parameter, `rules`.
 
-## Selecting rules
+## Plugin coordinates and goal
 
-Rules are opt-in unless a future release defines a named preset. A rule may be enabled by its stable OpenCleanup id and may contain rule-specific options.
+The current project coordinates are:
 
 ```xml
-<plugin>
-  <groupId>com.example</groupId>
-  <artifactId>opencleanup-maven-plugin</artifactId>
-  <version>${opencleanup.version}</version>
-  <configuration>
-    <rules>
-      <rule id="code-style" enabled="true">
-        <option name="control-statements.blocks" value="always"/>
-      </rule>
-      <rule id="unnecessary-code" enabled="true">
-        <option name="unused-code.imports" value="true"/>
-      </rule>
-      <rule id="java-features" enabled="false"/>
-    </rules>
-  </configuration>
-</plugin>
+<groupId>io.github.lhozdroid</groupId>
+<artifactId>opencleanup-maven-plugin</artifactId>
+<version>0.1.0-SNAPSHOT</version>
 ```
 
-The coordinates in this example are placeholders. They are intentionally not presented as published coordinates.
+The goal prefix is `opencleanup`, so the direct command is:
 
-Implemented rules can be selected directly by their IDs, or through their supported Eclipse-style groups. The current group mappings are `unnecessary-code`, `code-organizing`, `code-style`, `java-features`, `performance`, and `source-fixing`; group options use the same IDs as the corresponding direct rules.
+```bash
+mvn opencleanup:rewrite
+```
 
-## Proposed configuration model
+The goal is associated with Maven's `process-sources` phase. To run it as part of the lifecycle, declare an execution:
 
-| Element | Meaning |
-| --- | --- |
-| `rules` | Collection of cleanup rule groups to evaluate. |
-| `rule/@id` | Stable OpenCleanup rule-group identifier. |
-| `rule/@enabled` | Enables or disables the complete group. |
-| `option/@name` | Rule-specific option identifier documented on the rule page. |
-| `option/@value` | Option value, such as `true`, `false`, `always`, or `never`. |
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.github.lhozdroid</groupId>
+      <artifactId>opencleanup-maven-plugin</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+      <executions>
+        <execution>
+          <id>opencleanup-rewrite</id>
+          <goals>
+            <goal>rewrite</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+```
 
-An option should not silently enable its parent rule. Parent rules and options should be independently visible in the POM.
+The plugin requires a Maven project and Java 21 or newer. Because the current version is a snapshot, a project using this checkout must either use a repository containing the artifact or run `mvn install` in this repository first.
 
-## Source scope
+## Minimal configuration
 
-The plugin will need explicit scope controls before implementation is complete. The intended controls are:
+Rules are opt-in. This configuration enables one direct rule:
 
-- source roots to include;
-- file include and exclude patterns;
-- whether test sources are included; and
-- behavior when no rules are enabled.
+```xml
+<configuration>
+  <rules>
+    <rule>
+      <id>booleans.double-negation</id>
+    </rule>
+  </rules>
+</configuration>
+```
 
-The exact element names are deliberately left open until the Maven goal and parameter model are implemented.
+`enabled` defaults to `true`, so it may be written explicitly for clarity:
 
-## Rewrite behavior
+```xml
+<rule>
+  <id>booleans.double-negation</id>
+  <enabled>true</enabled>
+</rule>
+```
 
-The plugin should:
+An empty or omitted `rules` list selects nothing and leaves source files unchanged.
 
-1. parse each selected Java source file;
-2. apply only enabled transformations whose preconditions are satisfied;
-3. write a file only when its content changes; and
-4. provide a concise summary of changed files and applied rules.
+## Exact XML model
 
-Rules that can change runtime behavior, depend on a Java language level, or remove declarations should be clearly marked on their rule page and require explicit opt-in.
+Maven maps the plugin parameter to Java bean properties. Use nested child elements with these names; do not put `id`, `enabled`, `name`, or `value` in XML attributes.
+
+```xml
+<configuration>
+  <rules>
+    <rule>
+      <id>RULE_OR_GROUP_ID</id>
+      <enabled>true</enabled>
+      <options>
+        <option>
+          <name>OPTION_NAME</name>
+          <value>OPTION_VALUE</value>
+        </option>
+      </options>
+    </rule>
+  </rules>
+</configuration>
+```
+
+| XML path | Java property | Required | Description |
+| --- | --- | --- | --- |
+| `configuration/rules` | `List<RuleConfiguration> rules` | No | Rule/group configurations. |
+| `rule/id` | `String id` | Yes | A direct rule ID or one of the group IDs. |
+| `rule/enabled` | `boolean enabled` | No | Defaults to `true`; `false` disables that configuration. |
+| `rule/options` | `List<RuleOption> options` | No | Options passed to the selected rule or group. |
+| `rule/options/option` | `List<RuleOption>` item | No | One named option. |
+| `option/name` | `String name` | Yes for an option | Stable option name. |
+| `option/value` | `String value` | Yes for an option | String value interpreted by the selected rule. |
+
+Boolean values are case-insensitive in the implementation, but lowercase `true` and `false` are recommended for readable POM files. Option names and rule IDs are case-sensitive.
+
+## Direct rules versus groups
+
+A direct rule configuration uses the rule ID as `<id>`:
+
+```xml
+<rules>
+  <rule>
+    <id>control-statements.blocks</id>
+    <enabled>true</enabled>
+    <options>
+      <option>
+        <name>control-statements.blocks</name>
+        <value>always</value>
+      </option>
+    </options>
+  </rule>
+</rules>
+```
+
+A group configuration uses a group ID and selects rules through option names:
+
+```xml
+<rules>
+  <rule>
+    <id>code-style</id>
+    <enabled>true</enabled>
+    <options>
+      <option>
+        <name>control-statements.else-if</name>
+        <value>true</value>
+      </option>
+      <option>
+        <name>control-statements.blocks</name>
+        <value>jdt-style</value>
+      </option>
+    </options>
+  </rule>
+</rules>
+```
+
+An option does not enable a parent rule by itself. A group option with `false` is ignored. For enum-valued options, the option must have a supported value; see the rule pages for exact values.
+
+If the same direct rule and group select one ID, the first selection in the POM wins. Keep each rule selected in one place to avoid configuration ambiguity.
+
+## Complete group configuration example
+
+The following example demonstrates the XML shape and representative option types across all groups. It is valid Maven configuration, but it enables many rewrites and should be introduced gradually:
+
+```xml
+<configuration>
+  <rules>
+    <rule>
+      <id>code-organizing</id>
+      <options>
+        <option><name>format.source</name><value>true</value></option>
+        <option><name>format.trailing-whitespace</name><value>ignore-empty-lines</value></option>
+        <option><name>format.indentation</name><value>true</value></option>
+        <option><name>imports.organize</name><value>true</value></option>
+        <option><name>members.sort</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>code-style</id>
+      <options>
+        <option><name>control-statements.blocks</name><value>jdt-style</value></option>
+        <option><name>control-statements.else-if</name><value>true</value></option>
+        <option><name>control-statements.simplify-boolean-if-else</name><value>true</value></option>
+        <option><name>control-statements.reduce-indentation</name><value>true</value></option>
+        <option><name>control-statements.use-switch</name><value>true</value></option>
+        <option><name>control-statements.use-add-all</name><value>true</value></option>
+        <option><name>expressions.parentheses</name><value>never</value></option>
+        <option><name>expressions.extract-increment</name><value>true</value></option>
+        <option><name>expressions.pull-up-assignment</name><value>true</value></option>
+        <option><name>expressions.instanceof</name><value>true</value></option>
+        <option><name>number-literals.suffix</name><value>true</value></option>
+        <option><name>variable-declarations.final</name><value>true</value></option>
+        <option><name>fields</name><value>true</value></option>
+        <option><name>parameters</name><value>true</value></option>
+        <option><name>locals</name><value>true</value></option>
+        <option><name>functional-interfaces.lambda-method-reference</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>duplicate-code</id>
+      <options>
+        <option><name>expressions.operand-factorization</name><value>true</value></option>
+        <option><name>expressions.ternary-operator</name><value>true</value></option>
+        <option><name>comparisons.strictly-equal-or-different</name><value>true</value></option>
+        <option><name>blocks.merge-conditional</name><value>true</value></option>
+        <option><name>control-flow.merge</name><value>true</value></option>
+        <option><name>blocks.one-if-for-fall-through</name><value>true</value></option>
+        <option><name>blocks.redundant-fall-through-end</name><value>true</value></option>
+        <option><name>conditions.redundant-if</name><value>true</value></option>
+        <option><name>conditions.pull-out-if</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>java-features</id>
+      <options>
+        <option><name>instanceof.pattern-matching</name><value>true</value></option>
+        <option><name>instanceof.to-switch</name><value>true</value></option>
+        <option><name>switch.expressions</name><value>true</value></option>
+        <option><name>variable-declarations.var</name><value>true</value></option>
+        <option><name>functional-interfaces.convert</name><value>lambda</value></option>
+        <option><name>functional-interfaces.simplify-lambda</name><value>true</value></option>
+        <option><name>comparators.criteria</name><value>true</value></option>
+        <option><name>strings.join</name><value>true</value></option>
+        <option><name>try-with-resources</name><value>true</value></option>
+        <option><name>multi-catch</name><value>true</value></option>
+        <option><name>type-parameters.remove-redundant</name><value>true</value></option>
+        <option><name>hash.modernize</name><value>true</value></option>
+        <option><name>objects.equals</name><value>true</value></option>
+        <option><name>system-properties.constants</name><value>true</value></option>
+        <option><name>boxing.autoboxing</name><value>true</value></option>
+        <option><name>boxing.unboxing</name><value>true</value></option>
+        <option><name>loops.enhanced-for</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>member-accesses</id>
+      <options>
+        <option><name>member-accesses.non-static-fields</name><value>always</value></option>
+        <option><name>member-accesses.non-static-methods</name><value>always</value></option>
+        <option><name>member-accesses.static-members</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>missing-code</id>
+      <options>
+        <option><name>annotations.missing</name><value>true</value></option>
+        <option><name>annotations.override</name><value>true</value></option>
+        <option><name>annotations.override-interface</name><value>true</value></option>
+        <option><name>annotations.deprecated</name><value>true</value></option>
+        <option><name>serialization.serial-version-uid</name><value>generated</value></option>
+        <option><name>methods.unimplemented</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>performance</id>
+      <options>
+        <option><name>fields.single-use</name><value>true</value></option>
+        <option><name>loops.break</name><value>true</value></option>
+        <option><name>classes.static-inner</name><value>true</value></option>
+        <option><name>strings.string-builder</name><value>true</value></option>
+        <option><name>strings.plain-replacement</name><value>true</value></option>
+        <option><name>strings.is-blank</name><value>true</value></option>
+        <option><name>operators.lazy-logical</name><value>true</value></option>
+        <option><name>boxing.value-of</name><value>true</value></option>
+        <option><name>boxing.primitive-comparison</name><value>true</value></option>
+        <option><name>parsing.primitive</name><value>true</value></option>
+        <option><name>serialization.primitive</name><value>true</value></option>
+        <option><name>boxing.primitive-rather-than-wrapper</name><value>true</value></option>
+        <option><name>regular-expressions.precompile</name><value>true</value></option>
+        <option><name>strings.buffer-to-builder</name><value>true</value></option>
+        <option><name>strings.no-string-creation</name><value>true</value></option>
+        <option><name>booleans.literal</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>source-fixing</id>
+      <options>
+        <option><name>comparisons.invert-equals</name><value>true</value></option>
+        <option><name>comparisons.standard</name><value>true</value></option>
+        <option><name>bitwise.check-sign</name><value>true</value></option>
+        <option><name>deprecated.replace-method</name><value>true</value></option>
+        <option><name>deprecated.replace-field</name><value>true</value></option>
+      </options>
+    </rule>
+    <rule>
+      <id>unnecessary-code</id>
+      <options>
+        <option><name>unused-code.imports</name><value>true</value></option>
+        <option><name>unused-code.private-members</name><value>true</value></option>
+        <option><name>unused-code.suppress-warnings</name><value>true</value></option>
+        <option><name>casts.unnecessary</name><value>true</value></option>
+        <option><name>arrays.fill</name><value>true</value></option>
+        <option><name>null-checks.evaluate-nullable</name><value>true</value></option>
+        <option><name>statements.redundant-comparison</name><value>true</value></option>
+        <option><name>blocks.unreachable</name><value>true</value></option>
+        <option><name>collections.direct-map-method</name><value>true</value></option>
+        <option><name>collections.clone</name><value>true</value></option>
+        <option><name>maps.clone</name><value>true</value></option>
+        <option><name>assignments.overridden</name><value>true</value></option>
+        <option><name>comparators.redundant</name><value>true</value></option>
+        <option><name>arrays.creation</name><value>true</value></option>
+        <option><name>loops.unlooped-while</name><value>true</value></option>
+        <option><name>strings.redundant-substring-argument</name><value>true</value></option>
+        <option><name>negation.push-down</name><value>true</value></option>
+        <option><name>booleans.value-rather-than-comparison</name><value>true</value></option>
+        <option><name>booleans.double-negation</name><value>true</value></option>
+        <option><name>constructors.redundant-super</name><value>true</value></option>
+        <option><name>modifiers.redundant</name><value>true</value></option>
+        <option><name>if.embedded</name><value>true</value></option>
+        <option><name>semicolons.redundant</name><value>true</value></option>
+        <option><name>arrays.initializer</name><value>true</value></option>
+        <option><name>returns.expression</name><value>true</value></option>
+        <option><name>returns.useless</name><value>true</value></option>
+        <option><name>continues.useless</name><value>true</value></option>
+      </options>
+    </rule>
+  </rules>
+</configuration>
+```
+
+Use the individual rule pages for the rewrite shape, supported values, Java-version notes, and safety limitations. The example above is intentionally broad; enabling one group or a few direct rules at a time makes source review easier.
+
+## Group and rule reference
+
+The rule pages are the complete catalog:
+
+- [Code-organizing](rules/code-organizing.md)
+- [Code-style](rules/code-style.md)
+- [Duplicate-code](rules/duplicate-code.md)
+- [Java features](rules/java-features.md)
+- [Member accesses](rules/member-accesses.md)
+- [Missing code](rules/missing-code.md)
+- [Performance](rules/performance.md)
+- [Source fixing](rules/source-fixing.md)
+- [Unnecessary code](rules/unnecessary-code.md)
+
+## Source roots, files, and execution order
+
+The goal reads `MavenProject#getCompileSourceRoots()`. It recursively visits regular `.java` files below those directories. It does not currently expose include/exclude patterns, test-source selection, generated-source selection, a dry-run mode, backups, or a separate output directory.
+
+For each file, complete-source rules such as formatting are applied first. The resulting source is parsed as Java 21, then selected AST rules record and apply edits. A file is written only if its final content differs from the original. A selected rule that finds no safe candidate does not modify the file.
+
+The goal reports messages similar to:
+
+```text
+OpenCleanup visited 12 Java files and changed 3.
+Applied rules: imports.organize, booleans.double-negation
+```
+
+The applied-rule list contains rule IDs that changed at least one file in the execution.
+
+## Encoding and Java version
+
+The goal reads `project.build.sourceEncoding` from the Maven project properties. If the property is absent or blank, it uses UTF-8:
+
+```xml
+<properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+```
+
+The parser uses a Java 21 AST. Java-version-sensitive transformations are conservative. In particular, `modules.use-module-imports` is recognized in the catalog but does not emit Java 25 `import module` syntax from this Java 21 plugin.
+
+## Operational safety
+
+OpenCleanup edits source files in place. Before enabling a broad group:
+
+1. commit or otherwise back up the source;
+2. enable a small set of rules;
+3. run `mvn process-sources`;
+4. inspect the diff;
+5. compile and run tests; and
+6. expand the selection only after reviewing the result.
+
+Rules that remove members, add declarations, alter control flow, or change language/library constructs require particular review. The implementation skips cases with ambiguous syntax, missing proof, comments that cannot be preserved safely, or unsupported Java constructs.
 
 ## Configuration compatibility
 
-The plugin will mirror Eclipse concepts, not Eclipse's internal preference keys. OpenCleanup ids and option names are its public API and should remain stable even if Eclipse changes its internal implementation.
+OpenCleanup IDs and option names are its public API. They are the stable names accepted by the plugin's POM configuration.
