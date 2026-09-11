@@ -36,6 +36,7 @@ Each page maps to one cleanup configuration section from Eclipse JDT. The indivi
 
 - `unused-code.imports` removes unused single-type and single-static imports.
 - `booleans.value-rather-than-comparison` simplifies comparisons with boolean literals.
+- `returns.useless` removes a final empty return from a void method.
 - Wildcard imports are retained conservatively.
 - The `unnecessary-code` group can enable the implemented rule through its option.
 

@@ -21,7 +21,8 @@ public final class CleanupRuleRegistry {
     public CleanupRuleRegistry() {
         this.rules = Map.of(
                 UnusedImportsRule.ID, new UnusedImportsRule(),
-                BooleanValueRatherThanComparisonRule.ID, new BooleanValueRatherThanComparisonRule());
+                BooleanValueRatherThanComparisonRule.ID, new BooleanValueRatherThanComparisonRule(),
+                UselessReturnRule.ID, new UselessReturnRule());
     }
 
     /**
