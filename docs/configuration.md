@@ -9,7 +9,7 @@ The current project coordinates are:
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>0.1.0-SNAPSHOT</version>
+<version>1.0.0</version>
 ```
 
 The goal prefix is `opencleanup`, so the direct command is:
@@ -26,7 +26,7 @@ The goal is associated with Maven's `process-sources` phase. To run it as part o
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -40,7 +40,7 @@ The goal is associated with Maven's `process-sources` phase. To run it as part o
 </build>
 ```
 
-The plugin requires a Maven project and Java 21 or newer. Because the current version is a snapshot, a project using this checkout must either use a repository containing the artifact or run `mvn install` in this repository first.
+The plugin requires a Maven project and Java 21 or newer. When using this checkout before publishing the release to a Maven repository, run `mvn install` in this repository first so consuming projects can resolve version `1.0.0` locally.
 
 ## Minimal configuration
 

@@ -18,12 +18,12 @@ The current implementation targets Java 21 and contains all 102 documented rule 
 
 ## Quick start
 
-The plugin coordinates for the current snapshot are:
+The plugin coordinates for the first release are:
 
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>0.1.0-SNAPSHOT</version>
+<version>1.0.0</version>
 ```
 
 Add the plugin to the project that should be rewritten. Maven plugin configuration uses nested elements, so rule properties must be written as `<id>`, `<enabled>`, and `<options>` elements rather than XML attributes.
@@ -34,7 +34,7 @@ Add the plugin to the project that should be rewritten. Maven plugin configurati
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -78,7 +78,7 @@ For a one-time explicit invocation, use:
 mvn opencleanup:rewrite
 ```
 
-The explicit invocation requires the plugin to be resolvable from the configured repositories or from the local Maven repository. This repository can install the snapshot locally with `mvn install`.
+The explicit invocation requires the plugin to be resolvable from the configured repositories or from the local Maven repository. When using this checkout before publishing the release to a Maven repository, install it locally with `mvn install`.
 
 ## Requirements and build
 
@@ -94,7 +94,7 @@ mvn test
 mvn package
 ```
 
-`mvn package` generates the Maven plugin descriptor with the `opencleanup` goal prefix and the `rewrite` goal. Use `mvn install` when another local project needs the `0.1.0-SNAPSHOT` artifact.
+`mvn package` generates the Maven plugin descriptor with the `opencleanup` goal prefix and the `rewrite` goal. Use `mvn install` when another local project needs the `1.0.0` artifact from this checkout.
 
 ## Complete Maven configuration
 
