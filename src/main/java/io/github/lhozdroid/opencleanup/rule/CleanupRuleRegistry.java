@@ -22,7 +22,10 @@ public final class CleanupRuleRegistry {
         this.rules = Map.of(
                 UnusedImportsRule.ID, new UnusedImportsRule(),
                 BooleanValueRatherThanComparisonRule.ID, new BooleanValueRatherThanComparisonRule(),
-                UselessReturnRule.ID, new UselessReturnRule());
+                UselessReturnRule.ID, new UselessReturnRule(),
+                RedundantSuperCallRule.ID, new RedundantSuperCallRule(),
+                DoubleNegationRule.ID, new DoubleNegationRule(),
+                UselessContinueRule.ID, new UselessContinueRule());
     }
 
     /**
