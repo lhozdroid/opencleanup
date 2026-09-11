@@ -1,6 +1,7 @@
 # Publishing OpenCleanup
 
-OpenCleanup is published to Maven Central as:
+OpenCleanup is published to Maven Central. The current release is available at
+[io.github.lhozdroid:opencleanup-maven-plugin:1.0.0](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.0.0):
 
 ```text
 io.github.lhozdroid:opencleanup-maven-plugin:<version>
@@ -62,6 +63,29 @@ mvn --batch-mode --activate-profiles release clean deploy
 
 ## Consumer usage
 
-Once a version is published, consumers only need the normal plugin
-configuration. Maven resolves the plugin from Central automatically; they do
-not need to run `mvn install`.
+Consumers should declare the published plugin in the project's build section:
+
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.github.lhozdroid</groupId>
+      <artifactId>opencleanup-maven-plugin</artifactId>
+      <version>1.0.0</version>
+      <executions>
+        <execution>
+          <id>opencleanup-rewrite</id>
+          <goals>
+            <goal>rewrite</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+```
+
+Maven resolves the plugin from Maven Central automatically, so consumers do
+not need a `<repositories>` entry, a repository checkout, or `mvn install`.
+The complete rule configuration and lifecycle execution example are in the
+[Maven configuration guide](configuration.md).

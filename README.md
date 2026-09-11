@@ -4,9 +4,20 @@ OpenCleanup rewrites Java source files during a Maven build. It provides a Maven
 
 The current implementation targets Java 21 and contains all 102 documented rule identifiers. The implementations are intentionally conservative: when a transformation cannot be proven safe from the available source syntax, the source is left unchanged.
 
+## Why OpenCleanup exists
+
+OpenCleanup was created to keep source code clean and consistently styled in a
+way that makes collaboration and integration easier for multiple developers.
+Keeping those standards at the organizational level helps maintain a more
+consistent codebase across projects and teams. Binding that cleanup to a
+specific IDE was not an option, and after getting tired of searching for a
+solution, I decided to build one that works directly in the Maven build.
+
 ## Contents
 
 - [Quick start](#quick-start)
+- [Why OpenCleanup exists](#why-opencleanup-exists)
+- [Maven Central](#maven-central)
 - [Requirements and build](#requirements-and-build)
 - [Complete Maven configuration](#complete-maven-configuration)
 - [Configuration elements](#configuration-elements)
@@ -19,7 +30,11 @@ The current implementation targets Java 21 and contains all 102 documented rule 
 
 ## Quick start
 
-The plugin coordinates for the first release are:
+The current release is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.0.0). Add the plugin to the Maven project that should be rewritten; no repository declaration or local installation is required.
+
+## Maven Central
+
+The published coordinates are:
 
 ```xml
 <groupId>io.github.lhozdroid</groupId>
@@ -76,10 +91,10 @@ mvn process-sources
 For a one-time explicit invocation, use:
 
 ```bash
-mvn opencleanup:rewrite
+mvn io.github.lhozdroid:opencleanup-maven-plugin:1.0.0:rewrite
 ```
 
-The explicit invocation requires the plugin to be resolvable from the configured repositories or from the local Maven repository. When using this checkout before publishing the release to a Maven repository, install it locally with `mvn install`.
+When the plugin is declared in the project's `<build><plugins>` section, the shorter `mvn opencleanup:rewrite` form can also be used. Maven resolves the plugin from Maven Central automatically.
 
 ## Requirements and build
 
@@ -95,7 +110,7 @@ mvn test
 mvn package
 ```
 
-`mvn package` generates the Maven plugin descriptor with the `opencleanup` goal prefix and the `rewrite` goal. Use `mvn install` when another local project needs the `1.0.0` artifact from this checkout.
+`mvn package` generates the Maven plugin descriptor with the `opencleanup` goal prefix and the `rewrite` goal. Use `mvn install` only when testing an unpublished checkout from another local project.
 
 ## Complete Maven configuration
 
@@ -264,6 +279,10 @@ The goal runs in `process-sources`, before compilation. Rewrites happen in place
 
 The project is licensed under the [MIT License](LICENSE). Maven Central
 release configuration is documented in [Publishing OpenCleanup](docs/publishing.md).
+
+Version `1.0.0` is already published as
+`io.github.lhozdroid:opencleanup-maven-plugin:1.0.0` and can be used directly
+from Maven Central.
 
 The release workflow publishes a GitHub release through Maven Central after
 the required Central credentials and GPG signing secrets are configured.

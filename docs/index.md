@@ -4,6 +4,14 @@ OpenCleanup is a Maven plugin for applying Java source rewrites during a Maven b
 
 The complete documented catalog has concrete, conservative implementations. Rules remain opt-in through the POM, and unsupported or ambiguous source is left unchanged.
 
+## Use from Maven Central
+
+The released plugin is available from Maven Central as
+`io.github.lhozdroid:opencleanup-maven-plugin:1.0.0`. Add it to the
+`<build><plugins>` section of a Maven project and Maven will resolve it
+automatically; no repository declaration or `mvn install` is needed. See the
+[Maven configuration guide](configuration.md) for the complete setup.
+
 ## Documentation map
 
 ### Plugin configuration
