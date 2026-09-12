@@ -2,7 +2,7 @@
 
 OpenCleanup rewrites Java source files during a Maven build. It provides a Maven-facing catalog of practical Java cleanup transformations. Rules are explicitly selected in the POM, and only source files changed by a selected rule are written back.
 
-The current implementation targets Java 21 and contains all 102 documented rule identifiers. The implementations are intentionally conservative: when a transformation cannot be proven safe from the available source syntax, the source is left unchanged.
+The current implementation targets Java 21 and contains all 103 documented rule identifiers. The implementations are intentionally conservative: when a transformation cannot be proven safe from the available source syntax, the source is left unchanged.
 
 ## Why OpenCleanup exists
 
@@ -30,7 +30,7 @@ solution, I decided to build one that works directly in the Maven build.
 
 ## Quick start
 
-The current release is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.0.0). Add the plugin to the Maven project that should be rewritten; no repository declaration or local installation is required.
+The current release is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.0). Add the plugin to the Maven project that should be rewritten; no repository declaration or local installation is required.
 
 ## Maven Central
 
@@ -39,7 +39,7 @@ The published coordinates are:
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>1.0.0</version>
+<version>1.1.0</version>
 ```
 
 Add the plugin to the project that should be rewritten. Maven plugin configuration uses nested elements, so rule properties must be written as `<id>`, `<enabled>`, and `<options>` elements rather than XML attributes.
@@ -50,7 +50,7 @@ Add the plugin to the project that should be rewritten. Maven plugin configurati
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -91,7 +91,7 @@ mvn process-sources
 For a one-time explicit invocation, use:
 
 ```bash
-mvn io.github.lhozdroid:opencleanup-maven-plugin:1.0.0:rewrite
+mvn io.github.lhozdroid:opencleanup-maven-plugin:1.1.0:rewrite
 ```
 
 When the plugin is declared in the project's `<build><plugins>` section, the shorter `mvn opencleanup:rewrite` form can also be used. Maven resolves the plugin from Maven Central automatically.
@@ -162,7 +162,7 @@ For an option-bearing direct rule, the option name and value are interpreted by 
 | --- | --- | --- |
 | `rules` | No | List of `rule` configuration objects. An omitted or empty list performs no rewrites. |
 | `rule` | No | One rule or cleanup group. |
-| `rule/id` | Yes | One of the 102 rule IDs or one of the nine group IDs listed below. |
+| `rule/id` | Yes | One of the 103 rule IDs or one of the nine group IDs listed below. |
 | `rule/enabled` | No | `true` or `false`; defaults to `true`. A disabled rule or group selects nothing. |
 | `rule/options` | No | Options passed to the selected rule or group. |
 | `rule/options/option` | No | One named option. |
@@ -246,7 +246,7 @@ Every group and its complete rule list is documented in the [rule catalog](#rule
 | `source-fixing` | [Source-fixing rules](docs/rules/source-fixing.md): bitwise and deprecated API corrections. |
 | `unnecessary-code` | [Unnecessary-code rules](docs/rules/unnecessary-code.md): redundant code, expressions, and declarations. |
 
-The nine group pages enumerate all 102 stable rule IDs and the supported option values for each rule. The IDs are the public configuration API; internal preference keys are not accepted.
+The nine group pages enumerate all 103 stable rule IDs and the supported option values for each rule. The IDs are the public configuration API; internal preference keys are not accepted.
 
 ## Execution and source scope
 
@@ -280,8 +280,8 @@ The goal runs in `process-sources`, before compilation. Rewrites happen in place
 The project is licensed under the [MIT License](LICENSE). Maven Central
 release configuration is documented in [Publishing OpenCleanup](docs/publishing.md).
 
-Version `1.0.0` is already published as
-`io.github.lhozdroid:opencleanup-maven-plugin:1.0.0` and can be used directly
+Version `1.1.0` is already published as
+`io.github.lhozdroid:opencleanup-maven-plugin:1.1.0` and can be used directly
 from Maven Central.
 
 The release workflow publishes a GitHub release through Maven Central after

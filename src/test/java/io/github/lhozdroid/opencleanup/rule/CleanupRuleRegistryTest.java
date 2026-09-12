@@ -62,6 +62,23 @@ class CleanupRuleRegistryTest {
     }
 
     /**
+     * Verifies that simple type-name cleanup is selectable from the code-organizing group.
+     */
+    @Test
+    void resolvesSimpleTypeNameCleanupFromCodeOrganizingGroup() {
+        RuleConfiguration codeOrganizing = configuration(
+                "code-organizing", UseSimpleTypeNamesRule.ID);
+
+        assertEquals(
+                List.of(UseSimpleTypeNamesRule.ID),
+                new CleanupRuleRegistry()
+                        .resolve(List.of(codeOrganizing))
+                        .stream()
+                        .map(configured -> configured.rule().id())
+                        .toList());
+    }
+
+    /**
      * Verifies that the full documented catalog is present in the AST and source rule registries.
      *
      * @throws ReflectiveOperationException if the registry fields cannot be inspected
@@ -74,7 +91,7 @@ class CleanupRuleRegistryTest {
         astRules.setAccessible(true);
         sourceRules.setAccessible(true);
 
-        assertEquals(99, ((Map<?, ?>) astRules.get(registry)).size());
+        assertEquals(100, ((Map<?, ?>) astRules.get(registry)).size());
         assertEquals(3, ((Map<?, ?>) sourceRules.get(registry)).size());
     }
 

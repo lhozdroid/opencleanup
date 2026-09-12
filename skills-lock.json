@@ -19,6 +19,12 @@
       "skillPath": "skills/java-coding-standards/SKILL.md",
       "computedHash": "c45cf8f0b87d44804e582fe0d103e154214961bcae4c5e1cb473d2f20d529096"
     },
+    "java-distiller": {
+      "source": "soujava/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/java-distiller/SKILL.md",
+      "computedHash": "a78d9dffa2302909dcc16f607d628d487c884b45d52cbdc8d7f1ba62f55c99f5"
+    },
     "java-docs": {
       "source": "github/awesome-copilot",
       "sourceType": "github",

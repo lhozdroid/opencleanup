@@ -2,7 +2,7 @@
 
 This page is the authoritative guide to configuring the OpenCleanup Maven plugin. The plugin exposes one goal, `rewrite`, and one user-configurable parameter, `rules`.
 
-The released plugin is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.0.0). Maven projects can use it directly without adding a repository or installing the plugin locally.
+The released plugin is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.0). Maven projects can use it directly without adding a repository or installing the plugin locally.
 
 ## Plugin coordinates and goal
 
@@ -11,7 +11,7 @@ The current project coordinates are:
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>1.0.0</version>
+<version>1.1.0</version>
 ```
 
 The goal prefix is `opencleanup`, so the direct command is:
@@ -28,7 +28,7 @@ The goal is associated with Maven's `process-sources` phase. To run it as part o
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>

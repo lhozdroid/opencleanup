@@ -16,7 +16,7 @@ Add the plugin execution to the build and place the rule configuration inside th
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -75,6 +75,7 @@ AST-based rules for each file; within each kind, configured order is retained.
 | `format.source` | `true` or `false` | `tab-character`: `tab`, `space`, or `mixed`; `tab-size`: a decimal integer; `indentation-size`: a decimal integer; `line-split`: a decimal integer |
 | `format.trailing-whitespace` | `true` or `false` | `mode`: `all` or `ignore-empty-lines` |
 | `format.indentation` | `true` or `false` | `tab-character`: `tab`, `space`, or `mixed`; `tab-size`: a decimal integer; `indentation-size`: a decimal integer; `line-split`: a decimal integer |
+| `imports.use-simple-names` | `true` or `false` | None |
 | `imports.organize` | `true` or `false` | None |
 | `members.sort` | `true` or `false` | `order`: a comma-separated member-category list |
 
@@ -88,6 +89,7 @@ For a group configuration, the selection option uses the rule ID as its name:
     <option><name>format.source</name><value>true</value></option>
     <option><name>format.trailing-whitespace</name><value>ignore-empty-lines</value></option>
     <option><name>format.indentation</name><value>true</value></option>
+    <option><name>imports.use-simple-names</name><value>true</value></option>
     <option><name>imports.organize</name><value>true</value></option>
     <option><name>members.sort</name><value>true</value></option>
     <option><name>order</name><value>static-fields,instance-fields,constructors,methods,types</value></option>
@@ -223,6 +225,59 @@ the project wants indentation consistency but does not want a full formatting pa
 check prevents indentation from being copied across a changed line structure, and preserving the
 original delimiters prevents line-ending normalization. A formatter failure therefore leaves the
 source unchanged.
+
+## `imports.use-simple-names`
+
+### What it transforms
+
+This rule replaces fully qualified type names with their simple class names and adds the required
+ordinary imports. For example:
+
+```java
+class Example {
+    java.util.List<String> values;
+}
+```
+
+becomes:
+
+```java
+import java.util.List;
+
+class Example {
+    List<String> values;
+}
+```
+
+The rule also handles fully qualified annotation types and nested types such as
+`java.util.Map.Entry`.
+
+### How it recognizes and applies the rewrite
+
+The rule visits JDT type and annotation nodes, identifies names with a conventional lowercase
+package prefix, and records a simple-name replacement plus an ordinary import. It does not rewrite
+fully qualified static member references such as `java.util.Collections.emptyList()`.
+
+### Benefits and safety
+
+A simple name is shortened only when it is unambiguous from the source. Existing explicit imports,
+declared types, type parameters, existing simple type uses, and multiple qualified types sharing a
+simple name are considered. When a collision cannot be resolved safely, the affected qualified
+name remains unchanged. `java.lang` and same-package types do not receive redundant imports.
+
+For example, both types remain qualified because they cannot share one `List` import:
+
+```java
+java.util.List<String> standard;
+com.example.List custom;
+```
+
+If `java.util.List` is already explicitly imported, only references to that type may be shortened;
+the `com.example.List` reference remains qualified.
+
+This rule has no rule-specific options. In a group, the option name is
+`imports.use-simple-names` and its selection value is `true` or `false`. A direct configuration uses
+`<id>imports.use-simple-names</id>` and `<enabled>true</enabled>`.
 
 ## `imports.organize`
 

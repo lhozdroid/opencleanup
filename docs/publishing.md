@@ -1,7 +1,7 @@
 # Publishing OpenCleanup
 
 OpenCleanup is published to Maven Central. The current release is available at
-[io.github.lhozdroid:opencleanup-maven-plugin:1.0.0](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.0.0):
+[io.github.lhozdroid:opencleanup-maven-plugin:1.1.0](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.0):
 
 ```text
 io.github.lhozdroid:opencleanup-maven-plugin:<version>
@@ -71,7 +71,7 @@ Consumers should declare the published plugin in the project's build section:
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>

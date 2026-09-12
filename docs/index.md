@@ -7,7 +7,7 @@ The complete documented catalog has concrete, conservative implementations. Rule
 ## Use from Maven Central
 
 The released plugin is available from Maven Central as
-`io.github.lhozdroid:opencleanup-maven-plugin:1.0.0`. Add it to the
+`io.github.lhozdroid:opencleanup-maven-plugin:1.1.0`. Add it to the
 `<build><plugins>` section of a Maven project and Maven will resolve it
 automatically; no repository declaration or `mvn install` is needed. See the
 [Maven configuration guide](configuration.md) for the complete setup.
@@ -42,7 +42,7 @@ Each page maps to one cleanup category. The individual entries are selectable ru
 
 ## Implementation model
 
-All 102 documented rule identifiers are registered, grouped, and executable through the AST or source-level rewrite engine. The implementation targets Java 21 and reports applied rule identifiers.
+All 103 documented rule identifiers are registered, grouped, and executable through the AST or source-level rewrite engine. The implementation targets Java 21 and reports applied rule identifiers.
 
 For each configured source root, the plugin reads Java files, applies complete-source rules first,
 parses the result into a Java 21 syntax tree, applies AST rules, and writes only changed files.

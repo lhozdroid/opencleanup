@@ -124,6 +124,7 @@ public final class CleanupRuleRegistry {
                 Map.entry(UnreachableBlockRule.ID, new UnreachableBlockRule()),
                 Map.entry(UnusedPrivateMembersRule.ID, new UnusedPrivateMembersRule()),
                 Map.entry(UseAddAllRule.ID, new UseAddAllRule()),
+                Map.entry(UseSimpleTypeNamesRule.ID, new UseSimpleTypeNamesRule()),
                 Map.entry(UseSwitchRule.ID, new UseSwitchRule()),
                 Map.entry(UselessContinueRule.ID, new UselessContinueRule()),
                 Map.entry(UselessReturnRule.ID, new UselessReturnRule()),
@@ -181,6 +182,7 @@ public final class CleanupRuleRegistry {
             }
 
             if (CODE_ORGANIZING_GROUP_ID.equals(configuration.getId())) {
+                addIfEnabled(selected, configuration, UseSimpleTypeNamesRule.ID);
                 addIfEnabled(selected, configuration, OrganizeImportsRule.ID);
                 addIfEnabled(selected, configuration, MembersSortRule.ID);
                 continue;
