@@ -189,6 +189,9 @@ public final class VariableDeclarationsFinalRule implements CleanupRule {
      * @return {@code true} when every fragment is initialized and never written afterward
      */
     private boolean canAddFinalToLocal(ASTNode declaration) {
+        if (hasFinalModifier(declaration)) {
+            return false;
+        }
         Set<String> names = declarationFragmentNames(declaration);
         if (names.isEmpty() || !allFragmentsHaveInitializers(declaration)) {
             return false;
@@ -196,6 +199,25 @@ public final class VariableDeclarationsFinalRule implements CleanupRule {
         ASTNode executable = findEnclosingExecutable(declaration);
         return executable != null
                 && !hasWrite(executable, names, declaration.getStartPosition(), false);
+    }
+
+    /**
+     * Checks whether a supported declaration already carries the final modifier.
+     *
+     * @param declaration the declaration under consideration
+     * @return {@code true} when the declaration is already final
+     */
+    private boolean hasFinalModifier(ASTNode declaration) {
+        if (declaration instanceof VariableDeclarationStatement statement) {
+            return Modifier.isFinal(statement.getModifiers());
+        }
+        if (declaration instanceof VariableDeclarationExpression expression) {
+            return Modifier.isFinal(expression.getModifiers());
+        }
+        if (declaration instanceof SingleVariableDeclaration variable) {
+            return Modifier.isFinal(variable.getModifiers());
+        }
+        return false;
     }
 
     /**

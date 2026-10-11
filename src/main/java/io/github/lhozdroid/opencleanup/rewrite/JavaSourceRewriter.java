@@ -150,6 +150,7 @@ public final class JavaSourceRewriter {
         parser.setSource(source.toCharArray());
         parser.setStatementsRecovery(true);
         parser.setBindingsRecovery(true);
+        parser.setCompilerOptions(SourceRewriteSupport.javaSourceOptions());
         return (CompilationUnit) parser.createAST(null);
     }
 

@@ -95,6 +95,7 @@ public final class TrailingWhitespaceRule implements SourceRewriteRule {
         ASTParser parser = ASTParser.newParser(AST.JLS21);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setSource(source.toCharArray());
+        parser.setCompilerOptions(SourceRewriteSupport.javaSourceOptions());
         CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
         compilationUnit.accept(new ASTVisitor() {
             /**

@@ -1,5 +1,6 @@
 package io.github.lhozdroid.opencleanup.rule;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -136,6 +137,79 @@ class VariableDeclarationsFinalRuleTest {
         assertFalse(rewritten.contains("final int writtenLocal"));
         assertFalse(rewritten.contains("final boolean parameter"));
         assertFalse(rewritten.contains("final int index"));
+    }
+
+    /**
+     * Verifies that re-running the rule does not append a second final modifier.
+     *
+     * @throws Exception if AST edits cannot be applied
+     */
+    @Test
+    void doesNotAddFinalTwiceOnSecondPass() throws Exception {
+        String source = """
+                class Example {
+                    void check(boolean parameter) {
+                        int local = 1;
+                        for (int value : new int[] {1}) {
+                            use(value);
+                        }
+                        use(parameter, local);
+                    }
+
+                    void use(boolean parameter, int local) {
+                    }
+                }
+                """;
+
+        String firstPass = rewrite(
+                source,
+                VariableDeclarationsFinalRule.FIELDS,
+                VariableDeclarationsFinalRule.PARAMETERS,
+                VariableDeclarationsFinalRule.LOCALS);
+        String secondPass = rewrite(
+                firstPass,
+                VariableDeclarationsFinalRule.FIELDS,
+                VariableDeclarationsFinalRule.PARAMETERS,
+                VariableDeclarationsFinalRule.LOCALS);
+
+        assertTrue(firstPass.contains("final int local = 1;"));
+        assertTrue(firstPass.contains("for (final int value : new int[] {1})"));
+        assertEquals(firstPass, secondPass);
+    }
+
+    /**
+     * Verifies a second pass is a no-op for for-loop declaration expressions and catch clauses.
+     *
+     * @throws Exception if AST edits cannot be applied
+     */
+    @Test
+    void doesNotAddFinalTwiceToLoopAndCatchDeclarations() throws Exception {
+        String source = """
+                class Example {
+                    void run() {
+                        int total = 0;
+                        for (int index = 0; index < 1;) {
+                            total += index;
+                            break;
+                        }
+                        try {
+                            use(total);
+                        } catch (RuntimeException failure) {
+                            total++;
+                        }
+                    }
+
+                    void use(int value) {
+                    }
+                }
+                """;
+
+        String firstPass = rewrite(source, VariableDeclarationsFinalRule.LOCALS);
+        String secondPass = rewrite(firstPass, VariableDeclarationsFinalRule.LOCALS);
+
+        assertTrue(firstPass.contains("for (final int index = 0; index < 1;)"));
+        assertTrue(firstPass.contains("catch (final RuntimeException failure)"));
+        assertEquals(firstPass, secondPass);
     }
 
     /**

@@ -2,6 +2,7 @@ package io.github.lhozdroid.opencleanup.rule;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -48,6 +49,33 @@ class UnusedImportsRuleTest {
         assertEquals(1, report.getFilesVisited());
         assertEquals(1, report.getFilesChanged());
         assertEquals(List.of(sourceFile), report.getChangedFiles());
+    }
+
+    /**
+     * Verifies that an import used only as a record component type is retained.
+     *
+     * @throws Exception if the temporary source file cannot be created or rewritten
+     */
+    @Test
+    void retainsImportUsedOnlyInRecordHeader() throws Exception {
+        Path sourceFile = tempDirectory.resolve("Zone.java");
+        Files.writeString(sourceFile, """
+                package example;
+
+                import java.time.Clock;
+
+                record Zone(Clock clock) {
+                }
+                """, StandardCharsets.UTF_8);
+
+        RuleConfiguration configuration = new RuleConfiguration();
+        configuration.setId(UnusedImportsRule.ID);
+
+        new JavaSourceRewriter(new CleanupRuleRegistry())
+                .rewrite(List.of(tempDirectory), StandardCharsets.UTF_8, List.of(configuration));
+
+        String rewrittenSource = Files.readString(sourceFile);
+        assertTrue(rewrittenSource.contains("import java.time.Clock;"));
     }
 
     /**

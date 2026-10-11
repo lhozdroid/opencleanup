@@ -16,7 +16,7 @@ Add the plugin execution to the build and place the rule configuration inside th
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.1</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -151,6 +151,10 @@ project. It is intentionally a broad rewrite: spacing and line structure may
 change throughout the file. Malformed or unsupported input is not partially formatted by this
 rule; the original source is preserved when formatting fails. Review the formatter options before
 enabling it across an existing codebase because a first run can produce a large diff.
+
+**Known behavior:** the JDT formatter re-indents and strips trailing whitespace inside
+text blocks. The runtime string value is unchanged: Java strips incidental indentation
+from text blocks and trailing whitespace is insignificant, so this is safe.
 
 ## `format.trailing-whitespace`
 

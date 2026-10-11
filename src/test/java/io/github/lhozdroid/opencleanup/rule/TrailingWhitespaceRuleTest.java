@@ -60,4 +60,28 @@ class TrailingWhitespaceRuleTest {
                 + "}\n";
         assertEquals(expected, new TrailingWhitespaceRule().apply(source, configuration));
     }
+
+    /**
+     * Verifies that text-block content inside a record is preserved as semantic data.
+     *
+     * <p>The record uses a generic array component so it only parses at source level 21, which
+     * exercises the parser level used by this rule.</p>
+     */
+    @Test
+    void preservesTextBlockContentInRecord() {
+        String source = "record Range<T>(java.util.List<T>[] values) {\n"
+                + "    String text = \"\"\"\n"
+                + "        keep semantic spaces  \n"
+                + "        more\t\n"
+                + "        \"\"\";  \n"
+                + "}\n";
+        String expected = "record Range<T>(java.util.List<T>[] values) {\n"
+                + "    String text = \"\"\"\n"
+                + "        keep semantic spaces  \n"
+                + "        more\t\n"
+                + "        \"\"\";\n"
+                + "}\n";
+
+        assertEquals(expected, new TrailingWhitespaceRule().apply(source, null));
+    }
 }

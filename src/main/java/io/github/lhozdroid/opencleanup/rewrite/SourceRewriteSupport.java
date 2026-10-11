@@ -21,6 +21,27 @@ import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
 public final class SourceRewriteSupport {
 
     /**
+     * The Java source level used for parsing and formatting modern language features.
+     *
+     * <p>Follow-up: this should be derived from the project's compiler level
+     * ({@code maven.compiler.release} or {@code maven.compiler.source}) or exposed as a plugin
+     * option, with {@code "21"} as the fallback default.
+     */
+    public static final String JAVA_SOURCE_LEVEL = "21";
+
+    /**
+     * Builds JDT compiler options that parse and format at {@link #JAVA_SOURCE_LEVEL}.
+     *
+     * @return a mutable copy of the default JDT options with source and compliance set
+     */
+    public static Map<String, String> javaSourceOptions() {
+        Map<String, String> options = new HashMap<>(JavaCore.getOptions());
+        options.put(JavaCore.COMPILER_SOURCE, JAVA_SOURCE_LEVEL);
+        options.put(JavaCore.COMPILER_COMPLIANCE, JAVA_SOURCE_LEVEL);
+        return options;
+    }
+
+    /**
      * Creates the utility class.
      */
     private SourceRewriteSupport() {
@@ -34,7 +55,7 @@ public final class SourceRewriteSupport {
      * @return formatted source, or the original source when JDT cannot format it
      */
     public static String formatSource(String source, RuleConfiguration configuration) {
-        Map<String, String> options = new HashMap<>(JavaCore.getOptions());
+        Map<String, String> options = javaSourceOptions();
         applyFormatterOption(
                 options,
                 configuration,
