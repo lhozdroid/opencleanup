@@ -21,9 +21,10 @@ import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
  * Reduces indentation in safe terminal {@code if} statements.
  *
  * <p>The syntax-only implementation handles an {@code else} branch after a
- * non-completing then branch, and a final two-branch if by inverting its
- * condition. Candidates containing comments or declarations in statements
- * moved outside their original block are intentionally skipped.</p>
+ * non-completing then branch, and a final two-branch if whose else branch
+ * cannot complete normally by inverting its condition. Candidates containing
+ * comments or declarations in statements moved outside their original block
+ * are intentionally skipped.</p>
  */
 public final class ReduceIndentationRule implements CleanupRule {
 
@@ -110,6 +111,10 @@ public final class ReduceIndentationRule implements CleanupRule {
     /**
      * Inverts a final two-branch if and moves its then branch after the if.
      *
+     * <p>The else branch must not complete normally, so that inverting the
+     * condition cannot fall through to the hoisted then branch. Requiring the
+     * else branch to terminate keeps the rewrite semantics-preserving.</p>
+     *
      * @param compilationUnit the parsed Java compilation unit
      * @param node the candidate if statement
      * @param rewrite the rewrite collecting source edits
@@ -125,7 +130,7 @@ public final class ReduceIndentationRule implements CleanupRule {
                 || elseStatement instanceof IfStatement
                 || !isLastStatement(parentBlock, node)
                 || !completesNormally(node.getThenStatement())
-                || !completesNormally(elseStatement)
+                || completesNormally(elseStatement)
                 || containsVariableDeclaration(node.getThenStatement())
                 || containsComment(compilationUnit, node)) {
             return false;

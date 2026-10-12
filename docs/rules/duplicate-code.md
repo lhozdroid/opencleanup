@@ -329,7 +329,7 @@ Enable the complete group:
 <plugin>
   <groupId>io.github.lhozdroid</groupId>
   <artifactId>opencleanup-maven-plugin</artifactId>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <configuration>
     <rules>
       <rule>

@@ -48,12 +48,41 @@ class ReduceIndentationRuleTest {
     }
 
     /**
-     * Verifies a final two-branch if is inverted and its then branch is unindented.
+     * Verifies a final two-branch if whose else branch terminates is inverted
+     * and its then branch is unindented.
      *
      * @throws Exception if the source cannot be parsed or rewritten
      */
     @Test
-    void invertsFinalTwoBranchIf() throws Exception {
+    void invertsFinalTwoBranchIfWithTerminatingElse() throws Exception {
+        String source = """
+                class Example {
+                    void check(boolean condition) {
+                        if (condition) {
+                            first();
+                        } else {
+                            return;
+                        }
+                    }
+
+                    void first() {
+                    }
+                }
+                """;
+
+        String normalized = rewrite(source).replaceAll("\\s+", " ").trim();
+        assertTrue(normalized.contains("if (!condition) { return; } first();"));
+    }
+
+    /**
+     * Verifies a final two-branch if is left unchanged when the else branch can
+     * complete normally, because hoisting the then branch would run it on the
+     * else path too.
+     *
+     * @throws Exception if the source cannot be parsed or rewritten
+     */
+    @Test
+    void preservesFinalTwoBranchIfWhenElseCompletesNormally() throws Exception {
         String source = """
                 class Example {
                     void check(boolean condition) {
@@ -72,8 +101,31 @@ class ReduceIndentationRuleTest {
                 }
                 """;
 
-        String normalized = rewrite(source).replaceAll("\\s+", " ").trim();
-        assertTrue(normalized.contains("if (!condition) { second(); } first();"));
+        assertEquals(source, rewrite(source));
+    }
+
+    /**
+     * Verifies statements duplicated across both branches are not hoisted out
+     * of their block when the else branch completes normally.
+     *
+     * @throws Exception if the source cannot be parsed or rewritten
+     */
+    @Test
+    void preservesDuplicatedStatementsAcrossBranches() throws Exception {
+        String source = """
+                class Example {
+                    void run(boolean inward, int[] counts, int index, int delta) {
+                        if (inward) {
+                            counts[index] += delta;
+                        } else {
+                            final int removed = Math.min(delta, counts[index]);
+                            counts[index] -= removed;
+                        }
+                    }
+                }
+                """;
+
+        assertEquals(source, rewrite(source));
     }
 
     /**

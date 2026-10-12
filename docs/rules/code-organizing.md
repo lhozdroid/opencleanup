@@ -16,7 +16,7 @@ Add the plugin execution to the build and place the rule configuration inside th
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>

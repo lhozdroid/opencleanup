@@ -267,9 +267,11 @@ such as a branch ending in `return`, `throw`, `break`, or `continue`. The
 non-`if` else branch is then moved after the `if`.
 
 The second supported form is a two-branch `if` that is the last statement in
-its enclosing block. Both branches must be able to complete normally. The
-condition is negated, the former else branch becomes the then branch, and the
-former then branch is moved after the `if`.
+its enclosing block, whose then branch can complete normally and whose else
+branch cannot. The condition is negated, the former else branch becomes the
+then branch, and the former then branch is moved after the `if`. Because the
+else branch always exits, execution never falls through to the hoisted then
+branch.
 
 ### Benefit
 

@@ -2,6 +2,17 @@
 
 All notable changes to OpenCleanup are documented in this file.
 
+## [1.1.2] - 2026-10-12
+
+### Fixed
+
+- `control-statements.reduce-indentation` no longer hoists a then branch out
+  of its block when the else branch can complete normally. The inverted
+  two-branch rewrite now requires the else branch to be terminal, so the
+  hoisted then branch cannot run on the else path. Previously it duplicated
+  the then branch's statements in both cases (for example double-counting an
+  accumulator) even though the source was written correctly.
+
 ## [1.1.1] - 2026-10-11
 
 ### Fixed
