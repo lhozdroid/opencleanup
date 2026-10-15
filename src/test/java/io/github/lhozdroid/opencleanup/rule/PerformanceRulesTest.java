@@ -36,6 +36,64 @@ class PerformanceRulesTest {
     }
 
     /**
+     * Verifies shadowing parameters and array initializers are not rewritten as fields.
+     *
+     * @throws Exception if the AST rewrite cannot be applied
+     */
+    @Test
+    void preservesShadowedAndArrayFields() throws Exception {
+        String source = "class Example { private final int value = 1;"
+                + " private final int[] values = {1};"
+                + " void run(int value) { } int[] values() { return values; } }";
+
+        String rewritten = rewrite(source, new FieldsSingleUseRule());
+
+        assertEquals(source, rewritten);
+    }
+
+    /**
+     * Verifies a field name that collides with an inherited method is not inlined.
+     *
+     * @throws Exception if the AST rewrite cannot be applied
+     */
+    @Test
+    void preservesFieldNamesUsedAsMethodNames() throws Exception {
+        String source = "class Parent { int size() { return 2; } }"
+                + " class Example extends Parent { private final int size = 1;"
+                + " int run() { return size(); } }";
+
+        assertEquals(source, rewrite(source, new FieldsSingleUseRule()));
+    }
+
+    /**
+     * Verifies numeric fields are retained when literal inlining could change overload resolution.
+     *
+     * @throws Exception if the AST rewrite cannot be applied
+     */
+    @Test
+    void preservesNumericFieldsWithWideningInitializers() throws Exception {
+        String source = "class Example { private final long value = 1;"
+                + " void run() { use(value); } void use(int value) { }"
+                + " void use(long value) { } }";
+
+        assertEquals(source, rewrite(source, new FieldsSingleUseRule()));
+    }
+
+    /**
+     * Verifies that a Lombok-generated getter prevents a managed field from being inlined away.
+     *
+     * @throws Exception if the AST rewrite cannot be applied
+     */
+    @Test
+    void preservesLombokManagedSingleUseField() throws Exception {
+        String source = "import lombok.Getter; class Example { @Getter private final int value = 1; int run() { return value; } }";
+
+        String rewritten = rewrite(source, new FieldsSingleUseRule());
+
+        assertTrue(rewritten.contains("private final int value = 1;"));
+    }
+
+    /**
      * Verifies that an infinite loop with a leading break guard becomes a conditional loop.
      *
      * @throws Exception if the AST rewrite cannot be applied

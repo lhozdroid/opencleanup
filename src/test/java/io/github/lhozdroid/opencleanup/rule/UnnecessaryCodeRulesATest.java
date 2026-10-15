@@ -44,6 +44,103 @@ class UnnecessaryCodeRulesATest {
     }
 
     /**
+     * Verifies executable field initializers are retained when the field itself is unused.
+     *
+     * @throws Exception if parsing or applying an AST edit fails
+     */
+    @Test
+    void preservesUnusedFieldsWithExecutableInitializers() throws Exception {
+        String source = "class Example { private static int value = initialize();"
+                + " private int first, second = initialize();"
+                + " private static int initialize() { return 1; } }";
+
+        String rewritten = rewrite(source, UnusedPrivateMembersRule.ID);
+
+        assertTrue(rewritten.contains("private static int value = initialize();"));
+        assertTrue(rewritten.contains("private int second = initialize();"));
+        assertFalse(rewritten.contains("private int;"));
+    }
+
+    /**
+     * Verifies fields used by Lombok-generated accessors are not removed as unused.
+     *
+     * @throws Exception if parsing or applying an AST edit fails
+     */
+    @Test
+    void preservesLombokManagedFields() throws Exception {
+        String source = """
+                import lombok.Data;
+
+                @Data
+                class Example {
+                    private int value;
+                }
+                """;
+
+        String rewritten = rewrite(source, UnusedPrivateMembersRule.ID);
+
+        assertTrue(rewritten.contains("private int value;"));
+    }
+
+    /**
+     * Verifies a fully qualified Lombok annotation is recognized without bindings.
+     *
+     * @throws Exception if parsing or applying an AST edit fails
+     */
+    @Test
+    void preservesFullyQualifiedLombokFields() throws Exception {
+        String source = "@lombok.Data class Example { private int value; }";
+
+        String rewritten = rewrite(source, UnusedPrivateMembersRule.ID);
+
+        assertTrue(rewritten.contains("private int value;"));
+    }
+
+    /**
+     * Verifies unknown type-level annotations are treated as framework contracts.
+     *
+     * @throws Exception if parsing or applying an AST edit fails
+     */
+    @Test
+    void preservesFieldsUnderUnknownTypeAnnotations() throws Exception {
+        String source = "@custom.UsesFields class Example { private int value; }";
+
+        String rewritten = rewrite(source, UnusedPrivateMembersRule.ID);
+
+        assertTrue(rewritten.contains("private int value;"));
+    }
+
+    /**
+     * Verifies a private method annotated for Lombok builder generation is preserved.
+     *
+     * @throws Exception if parsing or applying an AST edit fails
+     */
+    @Test
+    void preservesLombokManagedMethods() throws Exception {
+        String source = "import lombok.Builder; class Example {"
+                + " @Builder private static Example create(String value) { return new Example(); } }";
+
+        String rewritten = rewrite(source, UnusedPrivateMembersRule.ID);
+
+        assertTrue(rewritten.contains("private static Example create(String value)"));
+    }
+
+    /**
+     * Verifies method references prevent removal of parameters required by the target method.
+     *
+     * @throws Exception if parsing or applying an AST edit fails
+     */
+    @Test
+    void preservesParametersReferencedThroughMethodReferences() throws Exception {
+        String source = "class Example { private void consume(String value) { }"
+                + " java.util.function.Consumer<String> consumer() { return this::consume; } }";
+
+        String rewritten = rewrite(source, UnusedPrivateMembersRule.ID);
+
+        assertTrue(rewritten.contains("consume(String value)"));
+    }
+
+    /**
      * Verifies that only provably unnecessary suppression tokens are removed.
      *
      * @throws Exception if parsing or applying an AST edit fails

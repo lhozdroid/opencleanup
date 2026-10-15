@@ -6,17 +6,28 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MemberValuePair;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodReference;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.NameQualifiedType;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.TypeMethodReference;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
@@ -70,20 +81,33 @@ public final class FieldsSingleUseRule implements CleanupRule {
                 if (node.fragments().size() != 1
                         || Modifier.isStatic(node.getModifiers())
                         || !Modifier.isPrivate(node.getModifiers())
-                        || !Modifier.isFinal(node.getModifiers())) {
+                        || !Modifier.isFinal(node.getModifiers())
+                        || LombokSupport.hasAnyAnnotation(node)
+                        || LombokSupport.hasAnyEnclosingTypeAnnotation(node)
+                        || LombokSupport.hasAnyAnnotatedMember(node)
+                        || LombokSupport.isManagedField(node)) {
                     return true;
                 }
                 VariableDeclarationFragment fragment =
                         (VariableDeclarationFragment) node.fragments().get(0);
-                if (fragment.getInitializer() == null || !isPure(fragment.getInitializer())) {
+                if (fragment.getInitializer() == null
+                        || !isCompileTimeConstant(
+                                node.getType(),
+                                fragment.getInitializer())) {
                     return true;
                 }
                 AbstractTypeDeclaration owner = enclosingType(node);
                 if (owner == null) {
                     return true;
                 }
+                if (hasShadowingDeclaration(owner, fragment.getName().getIdentifier(), node)) {
+                    return true;
+                }
                 List<SimpleName> uses = findUses(owner, fragment.getName(), node);
                 if (uses.size() != 1 || !isReadableUse(uses.get(0))) {
+                    return true;
+                }
+                if (enclosingType(uses.get(0)) != owner) {
                     return true;
                 }
                 rewrite.replace(uses.get(0), ASTNode.copySubtree(node.getAST(), fragment.getInitializer()), null);
@@ -103,8 +127,13 @@ public final class FieldsSingleUseRule implements CleanupRule {
      */
     private AbstractTypeDeclaration enclosingType(ASTNode node) {
         ASTNode current = node.getParent();
-        while (current != null && !(current instanceof AbstractTypeDeclaration)) {
+        while (current != null
+                && !(current instanceof AbstractTypeDeclaration)
+                && !(current instanceof AnonymousClassDeclaration)) {
             current = current.getParent();
+        }
+        if (current instanceof AnonymousClassDeclaration) {
+            return null;
         }
         return (AbstractTypeDeclaration) current;
     }
@@ -133,7 +162,6 @@ public final class FieldsSingleUseRule implements CleanupRule {
             public boolean visit(SimpleName node) {
                 if (node != declaration
                         && declaration.getIdentifier().equals(node.getIdentifier())
-                        && enclosingType(node) == owner
                         && enclosingField(node) != field) {
                     uses.add(node);
                 }
@@ -141,6 +169,52 @@ public final class FieldsSingleUseRule implements CleanupRule {
             }
         });
         return uses;
+    }
+
+    /**
+     * Checks whether a declaration inside the owner shadows the candidate field name.
+     *
+     * @param owner the field's declaring type
+     * @param fieldName the candidate field name
+     * @param field the field declaration to exclude
+     * @return {@code true} when a parameter, local, or catch variable has the same name
+     */
+    private boolean hasShadowingDeclaration(
+            AbstractTypeDeclaration owner,
+            String fieldName,
+            FieldDeclaration field) {
+        boolean[] shadowed = {false};
+        owner.accept(new ASTVisitor() {
+            /**
+             * Finds a declaration that can shadow the field.
+             *
+             * @param node the visited single-variable declaration
+             * @return {@code false} because no child declaration is relevant
+             */
+            @Override
+            public boolean visit(org.eclipse.jdt.core.dom.SingleVariableDeclaration node) {
+                if (fieldName.equals(node.getName().getIdentifier())) {
+                    shadowed[0] = true;
+                }
+                return false;
+            }
+
+            /**
+             * Finds a local variable that can shadow the field.
+             *
+             * @param node the visited variable fragment
+             * @return {@code true} to inspect the initializer for other declarations
+             */
+            @Override
+            public boolean visit(VariableDeclarationFragment node) {
+                if (enclosingField(node) != field
+                        && fieldName.equals(node.getName().getIdentifier())) {
+                    shadowed[0] = true;
+                }
+                return true;
+            }
+        });
+        return shadowed[0];
     }
 
     /**
@@ -165,89 +239,77 @@ public final class FieldsSingleUseRule implements CleanupRule {
      */
     private boolean isReadableUse(SimpleName name) {
         ASTNode parent = name.getParent();
-        if (parent instanceof QualifiedName qualified && qualified.getName() == name
+        if (parent instanceof QualifiedName qualified
+                && (qualified.getQualifier() == name || qualified.getName() == name)
                 || parent instanceof FieldAccess fieldAccess && fieldAccess.getName() == name
+                || parent instanceof org.eclipse.jdt.core.dom.SuperFieldAccess fieldAccess
+                        && fieldAccess.getName() == name
                 || parent instanceof Assignment assignment && assignment.getLeftHandSide() == name
                 || parent instanceof PostfixExpression
-                || parent instanceof PrefixExpression) {
+                || parent instanceof PrefixExpression
+                || parent instanceof MethodDeclaration method && method.getName() == name
+                || parent instanceof org.eclipse.jdt.core.dom.MethodInvocation invocation
+                        && invocation.getName() == name
+                || parent instanceof org.eclipse.jdt.core.dom.SuperMethodInvocation invocation
+                        && invocation.getName() == name
+                || parent instanceof MethodReference && methodReferenceName((MethodReference) parent) == name
+                || parent instanceof Annotation annotation && annotation.getTypeName() == name
+                || parent instanceof MemberValuePair pair && pair.getName() == name
+                || parent instanceof SimpleType
+                || parent instanceof NameQualifiedType
+                || parent instanceof QualifiedType
+                || parent instanceof AbstractTypeDeclaration declaration && declaration.getName() == name
+                || parent instanceof EnumConstantDeclaration constant && constant.getName() == name
+                || parent instanceof ImportDeclaration
+                || parent instanceof PackageDeclaration) {
             return false;
         }
         return !(parent instanceof VariableDeclarationFragment fragment && fragment.getName() == name);
     }
 
     /**
-     * Checks that an initializer has no method calls, assignments, or other obvious side effects.
+     * Returns the target name of a method reference.
      *
-     * @param expression the initializer to inspect
-     * @return {@code true} when its syntax is side-effect free
+     * @param reference the method reference to inspect
+     * @return the target method name, or {@code null} for an unsupported reference shape
      */
-    private boolean isPure(org.eclipse.jdt.core.dom.Expression expression) {
-        final boolean[] pure = {true};
-        expression.accept(new ASTVisitor() {
-            /**
-             * Rejects a method invocation in a field initializer.
-             *
-             * @param node the visited method invocation
-             * @return {@code false} because the expression is not pure
-             */
-            @Override
-            public boolean visit(org.eclipse.jdt.core.dom.MethodInvocation node) {
-                pure[0] = false;
-                return false;
-            }
-
-            /**
-             * Rejects an object construction in a field initializer.
-             *
-             * @param node the visited class creation
-             * @return {@code false} because the expression is not pure
-             */
-            @Override
-            public boolean visit(org.eclipse.jdt.core.dom.ClassInstanceCreation node) {
-                pure[0] = false;
-                return false;
-            }
-
-            /**
-             * Rejects an assignment in a field initializer.
-             *
-             * @param node the visited assignment
-             * @return {@code false} because the expression is not pure
-             */
-            @Override
-            public boolean visit(Assignment node) {
-                pure[0] = false;
-                return false;
-            }
-
-            /**
-             * Rejects a postfix update in a field initializer.
-             *
-             * @param node the visited postfix expression
-             * @return {@code false} because the expression is not pure
-             */
-            @Override
-            public boolean visit(PostfixExpression node) {
-                pure[0] = false;
-                return false;
-            }
-
-            /**
-             * Rejects a prefix update in a field initializer.
-             *
-             * @param node the visited prefix expression
-             * @return {@code false} because the expression is not pure
-             */
-            @Override
-            public boolean visit(PrefixExpression node) {
-                if (node.getOperator() == PrefixExpression.Operator.INCREMENT
-                        || node.getOperator() == PrefixExpression.Operator.DECREMENT) {
-                    pure[0] = false;
-                    return false;
-                }
-                return true;
-            }
-        });
-        return pure[0];
+    private SimpleName methodReferenceName(MethodReference reference) {
+        if (reference instanceof ExpressionMethodReference expressionReference) {
+            return expressionReference.getName();
+        }
+        if (reference instanceof TypeMethodReference typeReference) {
+            return typeReference.getName();
+        }
+        if (reference instanceof org.eclipse.jdt.core.dom.SuperMethodReference superReference) {
+            return superReference.getName();
+        }
+        return null;
     }
+
+    /**
+     * Checks whether an initializer is a compile-time constant expression.
+     *
+     * @param type the declared field type
+     * @param expression the field initializer
+     * @return {@code true} when inlining it cannot change evaluation timing or identity
+     */
+    private boolean isCompileTimeConstant(
+            org.eclipse.jdt.core.dom.Type type,
+            org.eclipse.jdt.core.dom.Expression expression) {
+        if (expression instanceof org.eclipse.jdt.core.dom.NumberLiteral numberLiteral) {
+            String token = numberLiteral.getToken();
+            return switch (type.toString()) {
+                case "int" -> !token.matches(".*[lLfFdD]$");
+                case "long" -> token.matches(".*[lL]$");
+                case "float" -> token.matches(".*[fF]$");
+                case "double" -> token.matches(".*(?:[dD]|[.]|[eE]).*");
+                default -> false;
+            };
+        }
+        return expression instanceof org.eclipse.jdt.core.dom.NullLiteral
+                || expression instanceof org.eclipse.jdt.core.dom.StringLiteral
+                || expression instanceof org.eclipse.jdt.core.dom.BooleanLiteral
+                || expression instanceof org.eclipse.jdt.core.dom.CharacterLiteral;
+    }
+
 }

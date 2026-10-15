@@ -446,9 +446,25 @@ public final class CleanupRuleRegistry {
             Map<String, ConfiguredSourceRule> selected,
             RuleConfiguration configuration,
             String ruleId) {
-        boolean hasRuleOption = configuration.optionValue(ruleId) != null;
+        String ruleOption = configuration.optionValue(ruleId);
+        boolean explicitlyDisabled = "false".equalsIgnoreCase(ruleOption);
+        String trailingWhitespaceMode = configuration.optionValue("mode");
+        boolean trailingWhitespaceOptionsValid = !TrailingWhitespaceRule.ID.equals(ruleId)
+                || isSupportedTrailingWhitespaceSelection(ruleOption)
+                        && isSupportedTrailingWhitespaceMode(trailingWhitespaceMode);
+        boolean hasRuleOption = switch (ruleId) {
+            case FormatSourceRule.ID, IndentationRule.ID -> "true".equalsIgnoreCase(ruleOption);
+            case TrailingWhitespaceRule.ID -> trailingWhitespaceOptionsValid
+                    && ruleOption != null
+                    && !ruleOption.isBlank()
+                    && !explicitlyDisabled;
+            default -> ruleOption != null && !ruleOption.isBlank() && !explicitlyDisabled;
+        };
         boolean hasTrailingWhitespaceMode = TrailingWhitespaceRule.ID.equals(ruleId)
-                && configuration.optionValue("mode") != null;
+                && trailingWhitespaceOptionsValid
+                && trailingWhitespaceMode != null
+                && !trailingWhitespaceMode.isBlank()
+                && !explicitlyDisabled;
         if (!hasRuleOption && !hasTrailingWhitespaceMode) {
             return;
         }
@@ -457,6 +473,34 @@ public final class CleanupRuleRegistry {
             throw new IllegalArgumentException("Unknown source cleanup rule: " + ruleId);
         }
         selected.putIfAbsent(rule.id(), new ConfiguredSourceRule(rule, configuration));
+    }
+
+    /**
+     * Checks whether a group selection value is supported for trailing-whitespace cleanup.
+     *
+     * @param value the group selection value
+     * @return {@code true} when the value selects a supported cleanup mode
+     */
+    private boolean isSupportedTrailingWhitespaceSelection(String value) {
+        return value == null
+                || value.isBlank()
+                || "true".equalsIgnoreCase(value)
+                || "all".equalsIgnoreCase(value)
+                || "ignore-empty-lines".equalsIgnoreCase(value)
+                || "false".equalsIgnoreCase(value);
+    }
+
+    /**
+     * Checks whether the optional trailing-whitespace mode is valid.
+     *
+     * @param value the mode value
+     * @return {@code true} when the mode is absent or supported
+     */
+    private boolean isSupportedTrailingWhitespaceMode(String value) {
+        return value == null
+                || value.isBlank()
+                || "all".equalsIgnoreCase(value)
+                || "ignore-empty-lines".equalsIgnoreCase(value);
     }
 
     public record ConfiguredRule(CleanupRule rule, RuleConfiguration configuration) {

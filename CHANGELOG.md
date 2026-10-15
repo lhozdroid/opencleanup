@@ -2,9 +2,28 @@
 
 All notable changes to OpenCleanup are documented in this file.
 
+## [1.2.0] - 2026-10-15
+
+### Added
+
+- Expose independent `comment-line-length` formatting configuration alongside `line-split`.
+- Preserve Lombok-managed and explicitly annotated members during conservative refactoring rules.
+- Skip malformed source files and write successful rewrites through atomic replacement.
+
+### Fixed
+
+- Use Maven compile source roots by default while supporting project-relative
+  `opencleanup.sourceRoots` overrides.
+- Prevent unsafe field inlining across shadowing declarations, method-name collisions, and
+  non-constant initializers.
+- Preserve POSIX file permissions when atomically replacing rewritten sources.
+- Reject invalid formatter and trailing-whitespace options instead of silently enabling cleanup.
+- Avoid suppressing required method stubs for Lombok getter/setter mismatches or restricted
+  delegation annotations.
+
 ## [1.1.3] - 2026-10-14
 
-- Add configurable source roots with `src/main/java` as the default.
+- Add configurable source roots, with Maven compile source roots used by default.
 - Document processing additional folders such as test sources.
 
 ## [1.1.2] - 2026-10-12

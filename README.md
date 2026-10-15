@@ -1,22 +1,40 @@
 # OpenCleanup Maven Plugin
 
-OpenCleanup rewrites Java source files during a Maven build. It provides a Maven-facing catalog of practical Java cleanup transformations. Rules are explicitly selected in the POM, and only source files changed by a selected rule are written back.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.lhozdroid/opencleanup-maven-plugin?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin)
+[![Java 21+](https://img.shields.io/badge/Java-21%2B-ED8B00)](https://www.oracle.com/java/technologies/javase/21-overview.html)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The current implementation targets Java 21 and contains all 103 documented rule identifiers. The implementations are intentionally conservative: when a transformation cannot be proven safe from the available source syntax, the source is left unchanged.
+**Deterministic, opt-in Java source cleanup for Maven builds.**
 
-## Why OpenCleanup exists
+OpenCleanup is a production-oriented Maven plugin that formats, modernizes, and
+cleans Java source directly in the build. Every rule is explicitly selected in
+`pom.xml`, rewrites are conservative, and only files whose final content changes
+are written back.
 
-OpenCleanup was created to keep source code clean and consistently styled in a
-way that makes collaboration and integration easier for multiple developers.
-Keeping those standards at the organizational level helps maintain a more
-consistent codebase across projects and teams. Binding that cleanup to a
-specific IDE was not an option, and after getting tired of searching for a
-solution, I decided to build one that works directly in the Maven build.
+> Make source cleanup repeatable, reviewable, and independent of a developer's IDE.
+
+## At a glance
+
+| Capability | What it provides |
+| --- | --- |
+| 103 documented rules | Formatting, code style, performance, Java features, imports, and more. |
+| Maven-native configuration | Stable rule IDs and explicit options committed with the project. |
+| Conservative rewrites | Ambiguous syntax is skipped instead of guessed. |
+| Lombok-aware cleanup | Generated accessors, builders, constructors, and related APIs are protected. |
+| CI-friendly execution | Runs in `process-sources`, reports changed-file counts and applied rules, and supports source-root configuration. |
+
+## Why OpenCleanup
+
+IDE formatting is useful for individuals, but it is difficult to guarantee that
+every contributor and CI job applies the same cleanup policy. OpenCleanup moves
+that policy into Maven, where it can be reviewed, versioned, and applied
+consistently across local builds and automation.
 
 ## Contents
 
 - [Quick start](#quick-start)
-- [Why OpenCleanup exists](#why-opencleanup-exists)
+- [At a glance](#at-a-glance)
+- [Why OpenCleanup](#why-opencleanup)
 - [Maven Central](#maven-central)
 - [Requirements and build](#requirements-and-build)
 - [Complete Maven configuration](#complete-maven-configuration)
@@ -28,9 +46,22 @@ solution, I decided to build one that works directly in the Maven build.
 - [Publishing](#publishing)
 - [Documentation](#documentation)
 
+## Compatibility
+
+| Requirement | Supported baseline |
+| --- | --- |
+| Java | 21 or newer |
+| Maven | 3.9.11 or newer |
+| Packaging | `maven-plugin` |
+| Source processing | Maven compile source roots by default; custom roots supported |
+
+OpenCleanup targets Java 21 syntax and uses Eclipse JDT for parsing and
+formatting. It does not require Lombok in the consuming project, but it
+recognizes common Lombok annotations when they are present in source.
+
 ## Quick start
 
-The current release is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.3). Add the plugin to the Maven project that should be rewritten; no repository declaration or local installation is required.
+Add the released plugin from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.2.0), select a small set of rules, then run `mvn process-sources`.
 
 ## Maven Central
 
@@ -39,7 +70,7 @@ The published coordinates are:
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>1.1.3</version>
+<version>1.2.0</version>
 ```
 
 Add the plugin to the project that should be rewritten. Maven plugin configuration uses nested elements, so rule properties must be written as `<id>`, `<enabled>`, and `<options>` elements rather than XML attributes.
@@ -50,7 +81,7 @@ Add the plugin to the project that should be rewritten. Maven plugin configurati
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.3</version>
+      <version>1.2.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -91,7 +122,7 @@ mvn process-sources
 For a one-time explicit invocation, use:
 
 ```bash
-mvn io.github.lhozdroid:opencleanup-maven-plugin:1.1.3:rewrite
+mvn io.github.lhozdroid:opencleanup-maven-plugin:1.2.0:rewrite
 ```
 
 When the plugin is declared in the project's `<build><plugins>` section, the shorter `mvn opencleanup:rewrite` form can also be used. Maven resolves the plugin from Maven Central automatically.
@@ -101,7 +132,7 @@ When the plugin is declared in the project's `<build><plugins>` section, the sho
 - Java 21 or newer to run and build the plugin.
 - Maven 3.9.11 or newer.
 - A Maven project, because the goal requires an injected `MavenProject`.
-- Java source files located under Maven compile source roots, or under the explicitly configured source roots.
+- Java source files located under Maven compile source roots, or under explicitly configured source roots.
 
 Build and verify the plugin from this repository with:
 
@@ -169,9 +200,33 @@ For an option-bearing direct rule, the option name and value are interpreted by 
 | `option/name` | Yes for an option | The rule-specific option name. |
 | `option/value` | Yes for an option | The string value interpreted by the selected rule. |
 
-Options do not enable a rule by themselves. For boolean options, use the literal value `true`; a value of `false` leaves that option disabled. Enum options such as `always`, `never`, `generated`, and `lambda` are enabled by selecting the rule and supplying the supported value.
+For a direct rule, the rule ID selects the rule and its options configure it. For a group, child-rule options select the corresponding rules. For boolean group options, use the literal value `true`; a value of `false` leaves that child rule disabled. Enum options such as `always`, `never`, `generated`, and `lambda` must use the supported value documented on the rule page.
 
 When the same rule is selected more than once, the first selection wins. This also applies when a direct rule and a group select the same ID. Avoid duplicate selections because the later configuration does not replace the earlier rule configuration.
+
+### Formatting configuration
+
+`line-split` controls the preferred width for ordinary Java source. Use
+`comment-line-length` to control comment wrapping independently. JDT's default
+preferred widths are 120 for source and 80 for comments.
+
+```xml
+<rule>
+  <id>code-organizing</id>
+  <enabled>true</enabled>
+  <options>
+    <option><name>format.source</name><value>true</value></option>
+    <option><name>line-split</name><value>120</value></option>
+    <option><name>comment-line-length</name><value>80</value></option>
+  </options>
+</rule>
+```
+
+The comment width is a formatter preference, not a hard physical maximum:
+long unbreakable tokens, inline comments, and some one-line block comments may
+remain wider. The option is supported by `format.source` and is passed through
+when `format.indentation` performs its conservative formatting pass. For the
+most predictable comment rewrite, use `format.source`.
 
 ## Selecting rules
 
@@ -253,13 +308,13 @@ The nine group pages enumerate all 103 stable rule IDs and the supported option 
 The `rewrite` goal:
 
 1. requires a Maven project;
-2. reads the configured source roots, defaulting to `src/main/java`;
+2. reads configured source roots, defaulting to Maven compile source roots;
 3. recursively visits regular files whose names end in `.java`;
 4. applies selected source-text rules, such as formatting, then selected AST rules;
 5. writes a file only when the final text differs from the original; and
 6. logs the number of visited and changed Java files plus the rule IDs that changed at least one file.
 
-The optional `opencleanup.sourceRoots` property selects the source folders to process as a comma-separated list. For example, `-Dopencleanup.sourceRoots=src/main/java,src/test/java` processes both production and test sources. If the property is omitted, only `src/main/java` is processed. Non-Java files are ignored.
+The optional `opencleanup.sourceRoots` property selects the source folders to process as a comma-separated list. Relative paths are resolved against the Maven project directory. For example, `-Dopencleanup.sourceRoots=src/main/java,src/test/java` processes both production and test sources. If the property is omitted, Maven compile source roots are processed. Non-Java files are ignored.
 
 The goal runs in `process-sources`, before compilation. Rewrites happen in place, so run the goal on a clean working tree or review the resulting diff immediately after execution.
 
@@ -272,23 +327,64 @@ The goal runs in `process-sources`, before compilation. Rewrites happen in place
 - `modules.use-module-imports` is recognized but intentionally emits no Java 25 `import module` syntax because this plugin targets Java 21.
 - Formatting can create broad diffs. Enable formatting, indentation, import organization, and member sorting separately.
 - Rules that add declarations or remove members are opt-in and conservative, but they should still be reviewed like any source modification.
+- Lombok-aware rules preserve fields and methods used by generated getters, setters, builders, constructors, withers, field-name constants, and related APIs. Annotated members are treated conservatively and may be left unchanged.
 - A selected rule may report no change when its preconditions are not satisfied.
 - The plugin does not guarantee that all rewrites are semantically equivalent in every project; compile and test the rewritten source.
+
+### Lombok compatibility
+
+The following rules account for common Lombok-generated members and avoid
+deleting or changing source declarations that generated APIs may depend on:
+
+- `unused-code.private-members`
+- `fields.single-use`
+- `variable-declarations.final`
+- `strings.buffer-to-builder`
+
+For example, a private field under `@Data`, `@Getter`, `@Setter`, `@Builder`,
+`@Value`, `@With`, `@SuperBuilder`, `@FieldNameConstants`, or a related type
+annotation is preserved. Explicitly annotated members are also skipped when a
+framework or annotation processor may consume them. The analysis is source
+based rather than binding based, so ambiguous cases are intentionally left
+unchanged.
+
+```java
+@lombok.Data
+class Account {
+    private String name;
+}
+```
+
+Cleanup will not delete `name` or make it final in a way that removes the
+generated setter.
 
 ## Publishing
 
 The project is licensed under the [MIT License](LICENSE). Maven Central
 release configuration is documented in [Publishing OpenCleanup](docs/publishing.md).
 
-Version `1.1.3` is already published as
-`io.github.lhozdroid:opencleanup-maven-plugin:1.1.3` and can be used directly
+Version `1.2.0` is published as
+`io.github.lhozdroid:opencleanup-maven-plugin:1.2.0` and can be used directly
 from Maven Central.
 
-The release workflow publishes a GitHub release through Maven Central after
-the required Central credentials and GPG signing secrets are configured.
+The release workflow runs after a GitHub release is published, then deploys the
+artifacts to Maven Central when the required Central credentials and GPG signing
+secrets are configured.
+
+## Contributing and support
+
+Bug reports and improvement proposals are welcome in the
+[GitHub issue tracker](https://github.com/lhozdroid/opencleanup/issues). For
+source-rewrite changes, include a focused regression test, explain the safety
+precondition, and update the relevant rule documentation. Run `mvn test` and
+review the generated source diff before opening a pull request.
+
+For security-sensitive reports, use a private GitHub security advisory rather
+than posting exploit details publicly.
 
 ## Documentation
 
+- [Documentation index](docs/index.md)
 - [Detailed Maven configuration](docs/configuration.md)
 - [Code-organizing rules](docs/rules/code-organizing.md)
 - [Code-style rules](docs/rules/code-style.md)
@@ -299,3 +395,6 @@ the required Central credentials and GPG signing secrets are configured.
 - [Performance rules](docs/rules/performance.md)
 - [Source-fixing rules](docs/rules/source-fixing.md)
 - [Unnecessary-code rules](docs/rules/unnecessary-code.md)
+- [Changelog](CHANGELOG.md)
+- [Publishing guide](docs/publishing.md)
+- [Contributing and issues](https://github.com/lhozdroid/opencleanup/issues)

@@ -16,7 +16,7 @@ Add the plugin execution to the build and place the rule configuration inside th
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.3</version>
+      <version>1.2.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -72,9 +72,9 @@ AST-based rules for each file; within each kind, configured order is retained.
 
 | Rule ID | Selection value | Rule-specific options |
 | --- | --- | --- |
-| `format.source` | `true` or `false` | `tab-character`: `tab`, `space`, or `mixed`; `tab-size`: a decimal integer; `indentation-size`: a decimal integer; `line-split`: a decimal integer |
+| `format.source` | `true` or `false` | `tab-character`: `tab`, `space`, or `mixed`; `tab-size`: a positive decimal integer; `indentation-size`: a positive decimal integer; `line-split`: a positive decimal integer; `comment-line-length`: a positive decimal integer |
 | `format.trailing-whitespace` | `true` or `false` | `mode`: `all` or `ignore-empty-lines` |
-| `format.indentation` | `true` or `false` | `tab-character`: `tab`, `space`, or `mixed`; `tab-size`: a decimal integer; `indentation-size`: a decimal integer; `line-split`: a decimal integer |
+| `format.indentation` | `true` or `false` | `tab-character`: `tab`, `space`, or `mixed`; `tab-size`: a positive decimal integer; `indentation-size`: a positive decimal integer; `line-split`: a positive decimal integer; `comment-line-length`: a positive decimal integer |
 | `imports.use-simple-names` | `true` or `false` | None |
 | `imports.organize` | `true` or `false` | None |
 | `members.sort` | `true` or `false` | `order`: a comma-separated member-category list |
@@ -97,11 +97,11 @@ For a group configuration, the selection option uses the rule ID as its name:
 </rule>
 ```
 
-The group recognizes `format.source`, `format.trailing-whitespace`, and `format.indentation` by
-the presence of their options, so use a supported value and use `true` for an enabled selection.
-The `mode` option is also recognized for `format.trailing-whitespace` in the group. Formatting
-options are passed as text to the formatter. Invalid or unsupported formatter values cause the
-formatter-based rule to leave the source unchanged.
+The group recognizes `format.source` and `format.indentation` when their selection value is
+`true`. `format.trailing-whitespace` accepts `true`, `all`, or `ignore-empty-lines`, or may be
+selected through its `mode` option. A `false` selector disables it even when `mode` is present;
+unsupported values select nothing. Numeric formatter options must be positive decimal integers
+and `tab-character` must be `tab`, `space`, or `mixed`; invalid values leave the source unchanged.
 
 ## `format.source`
 
@@ -121,9 +121,9 @@ becomes:
 
 ```java
 class Example {
-\tvoid run() {
-\t\tint value = 1;
-\t}
+    void run() {
+        int value = 1;
+    }
 }
 ```
 
@@ -138,11 +138,18 @@ The following options are read from the rule configuration:
 - `tab-character`: `tab`, `space`, or `mixed`.
 - `tab-size`: a decimal integer used for tab width.
 - `indentation-size`: a decimal integer used for indentation width.
-- `line-split`: a decimal integer used as the preferred line width.
+- `line-split`: a positive decimal integer used as the preferred line width; the JDT default is `120`.
+- `comment-line-length`: a positive decimal integer used as the preferred comment width; the JDT default is `80`.
 
-These values are strings in the POM. If an option is omitted, the built-in default is retained. If
-formatting cannot produce an edit or the formatter rejects the input or options, the original text
-is returned.
+`line-split` controls ordinary Java source layout. `comment-line-length` controls comment wrapping
+independently, so comments can use a narrower or wider width without changing the preferred code
+line width. It is a preferred width rather than a hard maximum: unbreakable tokens, inline comments,
+and some one-line block comments may remain wider. JDT most consistently applies it to Javadocs
+and breakable line or block comment content.
+
+These values are strings in the POM and surrounding whitespace is ignored. If an option is omitted,
+the built-in default is retained. If validation fails, formatting cannot produce an edit, or the
+formatter rejects the input, the original text is returned.
 
 ### Benefits and safety
 
@@ -217,10 +224,13 @@ leading spaces and tabs. The options are:
 - `tab-character`: `tab`, `space`, or `mixed`.
 - `tab-size`: a decimal integer used for tab width.
 - `indentation-size`: a decimal integer used for indentation width.
-- `line-split`: a decimal integer passed to the formatter while determining indentation.
+- `line-split`: a positive decimal integer passed to the formatter while determining indentation.
+- `comment-line-length`: a positive decimal integer passed to the formatter while determining comment layout.
 
 Blank lines retain their original content. If formatting changes the number of source lines, the
-rule skips the indentation rewrite and returns the original source.
+or the non-leading content of any line, the rule skips the indentation rewrite and returns the
+original source. Consequently, comment wrapping that changes line structure is intentionally left
+to `format.source`; indentation-only formatting will not partially apply it.
 
 ### Benefits and safety
 

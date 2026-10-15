@@ -2,7 +2,7 @@
 
 This page is the authoritative guide to configuring the OpenCleanup Maven plugin. The plugin exposes one goal, `rewrite`, and the user-configurable parameters `rules` and `sourceRoots`.
 
-The released plugin is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.3). Maven projects can use it directly without adding a repository or installing the plugin locally.
+The released plugin is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.2.0). Maven projects can use it directly without adding a repository or installing the plugin locally.
 
 ## Plugin coordinates and goal
 
@@ -11,7 +11,7 @@ The current project coordinates are:
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>1.1.3</version>
+<version>1.2.0</version>
 ```
 
 The goal prefix is `opencleanup`, so the direct command is:
@@ -28,7 +28,7 @@ The goal is associated with Maven's `process-sources` phase. To run it as part o
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.3</version>
+      <version>1.2.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -71,16 +71,44 @@ An empty or omitted `rules` list selects nothing and leaves source files unchang
 
 ## Source roots
 
-By default, the plugin processes `src/main/java`. Set
-`opencleanup.sourceRoots` to a comma-separated list when other folders should be included:
+By default, the plugin processes Maven compile source roots. Set
+`opencleanup.sourceRoots` to a comma-separated list when a custom scope is required:
 
 ```bash
 mvn opencleanup:rewrite -Dopencleanup.sourceRoots=src/main/java,src/test/java
 ```
 
-The property replaces the default source root for that execution. Paths may be absolute
-or relative to the Maven project directory. Only regular `.java` files below the selected folders
-are processed.
+The property replaces the default source-root list for that execution. Paths may be absolute or
+relative to the Maven project directory. Only regular `.java` files below the selected folders are
+processed.
+
+## Formatter widths
+
+The source-formatting rules expose Eclipse JDT's two independent preferred widths:
+
+| Option | Rules | Default | Purpose |
+| --- | --- | --- | --- |
+| `line-split` | `format.source`, `format.indentation` | `120` | Preferred width for ordinary Java source. |
+| `comment-line-length` | `format.source`, `format.indentation` | `80` | Preferred width for breakable comment content. |
+
+Use them in a group configuration like this:
+
+```xml
+<rule>
+  <id>code-organizing</id>
+  <options>
+    <option><name>format.source</name><value>true</value></option>
+    <option><name>line-split</name><value>120</value></option>
+    <option><name>comment-line-length</name><value>80</value></option>
+  </options>
+</rule>
+```
+
+Both values must be positive decimal integers. They are preferred formatter widths, not hard
+physical limits: URLs, unbreakable tokens, inline comments, and some one-line block comments may
+remain wider. `format.source` applies the complete comment rewrite. `format.indentation` only copies
+indentation when the formatter preserves line count and non-leading line content, so it skips
+comment wrapping that would change the source structure.
 
 ## Exact XML model
 
@@ -337,9 +365,16 @@ The rule pages are the complete catalog:
 
 ## Source roots, files, and execution order
 
-The goal reads `MavenProject#getCompileSourceRoots()`. It recursively visits regular `.java` files below those directories. It does not currently expose include/exclude patterns, test-source selection, generated-source selection, a dry-run mode, backups, or a separate output directory.
+The goal reads `MavenProject#getCompileSourceRoots()` by default. The optional
+`opencleanup.sourceRoots` property overrides that list with comma-separated paths; relative paths
+are resolved against the Maven project directory. It recursively visits regular `.java` files below
+those directories. It does not currently expose include/exclude patterns, a dry-run mode, backups,
+or a separate output directory.
 
-For each file, complete-source rules such as formatting are applied first. The resulting source is parsed as Java 21, then selected AST rules record and apply edits. A file is written only if its final content differs from the original. A selected rule that finds no safe candidate does not modify the file.
+For each file, complete-source rules such as formatting are applied first. The resulting source is
+parsed as Java 21, then selected AST rules record and apply edits. Files with parser errors are
+left unchanged. A file is written atomically only if its final content differs from the original.
+A selected rule that finds no safe candidate does not modify the file.
 
 The goal reports messages similar to:
 
@@ -374,6 +409,19 @@ OpenCleanup edits source files in place. Before enabling a broad group:
 6. expand the selection only after reviewing the result.
 
 Rules that remove members, add declarations, alter control flow, or change language/library constructs require particular review. The implementation skips cases with ambiguous syntax, missing proof, comments that cannot be preserved safely, or unsupported Java constructs.
+
+## Lombok-aware cleanup
+
+The member-removal, field-inlining, final-declaration, and buffer-to-builder rules recognize common
+Lombok-generated APIs. Fields and methods used by `@Data`, `@Getter`, `@Setter`, `@Builder`,
+`@SuperBuilder`, `@Value`, `@With`, constructor annotations, `@FieldNameConstants`, `@Delegate`,
+and related type annotations are preserved conservatively. Explicitly annotated members are also
+skipped because annotation processors and runtime frameworks may consume them.
+
+The analysis is syntax-based and does not require Lombok to be present in the plugin's consuming
+project. It recognizes fully qualified names and common Lombok imports, but it cannot prove every
+annotation-processing contract; ambiguous cases remain unchanged. Compile and test rewritten
+sources with annotation processing enabled before adopting broad cleanup groups.
 
 ## Configuration compatibility
 

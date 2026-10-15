@@ -112,6 +112,36 @@ class PerformanceRulesBTest {
     }
 
     /**
+     * Verifies Lombok-managed field types are not changed by the buffer cleanup.
+     *
+     * @throws Exception if the AST rewrite cannot be applied
+     */
+    @Test
+    void preservesLombokManagedBufferFields() throws Exception {
+        String source = "import lombok.Getter; class Example {"
+                + " @Getter private StringBuffer value = new StringBuffer(); }";
+
+        String rewritten = rewrite(source, new BufferToBuilderRule());
+
+        assertTrue(rewritten.contains("private StringBuffer value = new StringBuffer();"));
+    }
+
+    /**
+     * Verifies an annotated constructor keeps its field parameter type aligned.
+     *
+     * @throws Exception if the AST rewrite cannot be applied
+     */
+    @Test
+    void preservesBufferFieldsUsedByAnnotatedConstructors() throws Exception {
+        String source = "class Example { private StringBuffer value = new StringBuffer();"
+                + " @lombok.Builder private Example(StringBuffer value) { this.value = value; } }";
+
+        String rewritten = rewrite(source, new BufferToBuilderRule());
+
+        assertTrue(rewritten.contains("private StringBuffer value = new StringBuffer();"));
+    }
+
+    /**
      * Verifies that empty and literal String constructors are removed.
      *
      * @throws Exception if AST edits cannot be applied

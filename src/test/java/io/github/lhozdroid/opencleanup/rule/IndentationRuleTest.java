@@ -31,4 +31,17 @@ class IndentationRuleTest {
 
         assertEquals(expected, new IndentationRule().apply(source, null));
     }
+
+    /**
+     * Verifies line-content changes from comment wrapping or formatter reflow are not
+     * misapplied to an unrelated original line.
+     */
+    @Test
+    void preservesSourceWhenFormatterChangesLineMapping() {
+        String source = "@Annotation(first = one,\n"
+                + "        second = two)\n"
+                + "class Example {}\n";
+
+        assertEquals(source, new IndentationRule().apply(source, null));
+    }
 }

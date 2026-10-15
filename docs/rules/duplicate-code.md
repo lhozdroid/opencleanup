@@ -329,7 +329,7 @@ Enable the complete group:
 <plugin>
   <groupId>io.github.lhozdroid</groupId>
   <artifactId>opencleanup-maven-plugin</artifactId>
-  <version>1.1.3</version>
+  <version>1.2.0</version>
   <configuration>
     <rules>
       <rule>
@@ -356,4 +356,7 @@ Enable selected rules instead:
 </rules>
 ```
 
-The plugin processes Java files in the configured source roots, defaulting to `src/main/java`. It writes a file only when at least one selected rule schedules a valid replacement. Parsing failures, unsupported syntax, comments that could be displaced, and uncertain control-flow cases are left unchanged; they are not guessed at or forcefully rewritten.
+The plugin processes Java files in the configured source roots, defaulting to Maven compile source
+roots. It writes a file only when at least one selected rule schedules a valid replacement. Parsing
+failures, unsupported syntax, comments that could be displaced, and uncertain control-flow cases
+are left unchanged; they are not guessed at or forcefully rewritten.

@@ -1,7 +1,7 @@
 # Publishing OpenCleanup
 
 OpenCleanup is published to Maven Central. The current release is available at
-[io.github.lhozdroid:opencleanup-maven-plugin:1.1.3](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.3):
+[io.github.lhozdroid:opencleanup-maven-plugin:1.2.0](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.2.0):
 
 ```text
 io.github.lhozdroid:opencleanup-maven-plugin:<version>
@@ -10,6 +10,11 @@ io.github.lhozdroid:opencleanup-maven-plugin:<version>
 The `release` Maven profile creates the source and Javadoc JARs, signs the
 release with GPG, generates Central checksums, and publishes through the
 Central Publisher Portal.
+
+The `1.2.0` release includes the independent `comment-line-length` formatter
+option and conservative Lombok-aware refactoring protections. These public
+changes are documented in the [configuration guide](configuration.md) and
+[changelog](../CHANGELOG.md).
 
 ## One-time Central setup
 
@@ -58,8 +63,13 @@ For a local, signed release, configure the `central` server in
 `~/.m2/settings.xml`, import the release GPG key, and run:
 
 ```bash
+mvn -q -DforkCount=0 -DreuseForks=false test
 mvn --batch-mode --activate-profiles release clean deploy
 ```
+
+After deployment, verify the `1.2.0` coordinates on Maven Central before
+announcing the release. Central components are immutable; publish a new
+version if a correction is required.
 
 ## Consumer usage
 
@@ -71,7 +81,7 @@ Consumers should declare the published plugin in the project's build section:
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.3</version>
+      <version>1.2.0</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>

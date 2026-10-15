@@ -7,7 +7,7 @@ The complete documented catalog has concrete, conservative implementations. Rule
 ## Use from Maven Central
 
 The released plugin is available from Maven Central as
-`io.github.lhozdroid:opencleanup-maven-plugin:1.1.3`. Add it to the
+`io.github.lhozdroid:opencleanup-maven-plugin:1.2.0`. Add it to the
 `<build><plugins>` section of a Maven project and Maven will resolve it
 automatically; no repository declaration or `mvn install` is needed. See the
 [Maven configuration guide](configuration.md) for the complete setup.
@@ -17,6 +17,8 @@ automatically; no repository declaration or `mvn install` is needed. See the
 ### Plugin configuration
 
 - [Maven configuration](configuration.md) — exact POM structure, rule selection, options, source scope, and safety behavior.
+- [Publishing](publishing.md) — release and Maven Central publishing guidance.
+- [Changelog](../CHANGELOG.md) — user-visible release history.
 
 ### Cleanup rule groups
 
@@ -38,7 +40,7 @@ Each page maps to one cleanup category. The individual entries are selectable ru
 - Rule options must be explicit and reviewable in source control.
 - Rewrites must preserve valid Java syntax and avoid changing behavior unless the selected rule intentionally requests a semantic modernization.
 - Java-version-sensitive rules document their target level and skip unsupported or ambiguous source forms.
-- The plugin reports which files and rules changed so rewrites are visible in CI.
+- The plugin reports changed-file counts and applied rule IDs so rewrites are visible in CI.
 
 ## Implementation model
 

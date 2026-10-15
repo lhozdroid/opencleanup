@@ -7,6 +7,10 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jface.text.BadLocationException;
@@ -55,27 +59,37 @@ public final class SourceRewriteSupport {
      * @return formatted source, or the original source when JDT cannot format it
      */
     public static String formatSource(String source, RuleConfiguration configuration) {
+        if (hasSyntaxErrors(source)) {
+            return source;
+        }
         Map<String, String> options = javaSourceOptions();
-        applyFormatterOption(
+        if (!applyFormatterOption(
                 options,
                 configuration,
                 "tab-character",
-                DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR);
-        applyFormatterOption(
+                DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR)
+                || !applyFormatterOption(
                 options,
                 configuration,
                 "tab-size",
-                DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE);
-        applyFormatterOption(
+                DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE)
+                || !applyFormatterOption(
                 options,
                 configuration,
                 "indentation-size",
-                DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE);
-        applyFormatterOption(
+                DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE)
+                || !applyFormatterOption(
                 options,
                 configuration,
                 "line-split",
-                DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT);
+                DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT)
+                || !applyFormatterOption(
+                options,
+                configuration,
+                "comment-line-length",
+                DefaultCodeFormatterConstants.FORMATTER_COMMENT_LINE_LENGTH)) {
+            return source;
+        }
 
         try {
             CodeFormatter formatter = ToolFactory.createCodeFormatter(options);
@@ -87,10 +101,36 @@ public final class SourceRewriteSupport {
                     source.length(),
                     0,
                     lineDelimiter(source));
-            return edit == null ? source : applyTextEdit(source, edit);
+            if (edit == null) {
+                return source;
+            }
+            String formatted = applyTextEdit(source, edit);
+            return hasSyntaxErrors(formatted) ? source : formatted;
         } catch (RuntimeException exception) {
             return source;
         }
+    }
+
+    /**
+     * Checks whether a source unit contains parser errors before formatting.
+     *
+     * @param source the Java source text to inspect
+     * @return {@code true} when parsing reports at least one error
+     */
+    private static boolean hasSyntaxErrors(String source) {
+        ASTParser parser = ASTParser.newParser(AST.JLS21);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        parser.setSource(source.toCharArray());
+        parser.setStatementsRecovery(true);
+        parser.setBindingsRecovery(true);
+        parser.setCompilerOptions(javaSourceOptions());
+        CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
+        for (IProblem problem : compilationUnit.getProblems()) {
+            if (problem.isError()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -170,6 +210,13 @@ public final class SourceRewriteSupport {
             return original;
         }
 
+        for (int index = 0; index < originalLines.size(); index++) {
+            if (!originalLines.get(index).content().stripLeading()
+                    .equals(formattedLines.get(index).content().stripLeading())) {
+                return original;
+            }
+        }
+
         List<SourceLine> rewrittenLines = new ArrayList<>(originalLines.size());
         for (int index = 0; index < originalLines.size(); index++) {
             SourceLine originalLine = originalLines.get(index);
@@ -207,10 +254,10 @@ public final class SourceRewriteSupport {
     }
 
     /**
-     * Returns the dominant line delimiter used by source text.
+     * Returns the first line delimiter found in source text.
      *
      * @param source the source text to inspect
-     * @return {@code "\r\n"}, {@code "\r"}, or {@code "\n"}
+     * @return {@code "\r\n"}, {@code "\r"}, {@code "\n"}, or the platform delimiter when none exists
      */
     public static String lineDelimiter(String source) {
         for (int index = 0; index < source.length(); index++) {
@@ -234,18 +281,44 @@ public final class SourceRewriteSupport {
      * @param configuration the optional rule configuration
      * @param optionName the OpenCleanup option name
      * @param formatterKey the corresponding JDT formatter key
+     * @return {@code true} when the option is absent or valid
      */
-    private static void applyFormatterOption(
+    private static boolean applyFormatterOption(
             Map<String, String> options,
             RuleConfiguration configuration,
             String optionName,
             String formatterKey) {
         if (configuration == null) {
-            return;
+            return true;
         }
         String value = configuration.optionValue(optionName);
         if (value != null && !value.isBlank()) {
-            options.put(formatterKey, value);
+            String normalized = value.trim();
+            if ("tab-character".equals(optionName)
+                    && !normalized.equals("tab")
+                    && !normalized.equals("space")
+                    && !normalized.equals("mixed")) {
+                return false;
+            }
+            if (!"tab-character".equals(optionName) && !isPositiveInteger(normalized)) {
+                return false;
+            }
+            options.put(formatterKey, normalized);
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether a formatter numeric option is a positive decimal integer.
+     *
+     * @param value the option value to validate
+     * @return {@code true} when the value is a positive integer accepted by the plugin
+     */
+    private static boolean isPositiveInteger(String value) {
+        try {
+            return Integer.parseInt(value) > 0;
+        } catch (NumberFormatException exception) {
+            return false;
         }
     }
 

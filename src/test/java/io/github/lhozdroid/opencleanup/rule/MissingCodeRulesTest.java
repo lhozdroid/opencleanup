@@ -96,6 +96,82 @@ class MissingCodeRulesTest {
     }
 
     /**
+     * Verifies a Lombok-generated accessor is not shadowed by a synthetic stub.
+     *
+     * @throws Exception if parsing or applying an edit fails
+     */
+    @Test
+    void skipsManagedLombokTypes() throws Exception {
+        String source = "interface Named { String getName(); }"
+                + " @lombok.Getter class Person implements Named { private String name; }";
+
+        String rewritten = rewrite(source, UnimplementedMethodsRule.ID, UnimplementedMethodsRule::new);
+
+        assertEquals(source, rewritten);
+    }
+
+    /**
+     * Verifies a field-level Lombok getter satisfies the matching interface contract.
+     *
+     * @throws Exception if parsing or applying an edit fails
+     */
+    @Test
+    void skipsFieldLevelLombokGetterContract() throws Exception {
+        String source = "interface Named { String getName(); }"
+                + " class Person implements Named { @lombok.Getter private String name; }";
+
+        String rewritten = rewrite(source, UnimplementedMethodsRule.ID, UnimplementedMethodsRule::new);
+
+        assertEquals(source, rewritten);
+    }
+
+    /**
+     * Verifies a getter annotation does not suppress an unrelated setter contract.
+     *
+     * @throws Exception if parsing or applying an edit fails
+     */
+    @Test
+    void doesNotTreatGetterAsSetter() throws Exception {
+        String source = "interface Named { void setName(String name); }"
+                + " @lombok.Getter class Person implements Named { private String name; }";
+
+        String rewritten = rewrite(source, UnimplementedMethodsRule.ID, UnimplementedMethodsRule::new);
+
+        assertTrue(rewritten.contains("public void setName(String name)"));
+    }
+
+    /**
+     * Verifies restricted Lombok delegation does not suppress unrelated contracts.
+     *
+     * @throws Exception if parsing or applying an edit fails
+     */
+    @Test
+    void doesNotTreatRestrictedDelegateAsEveryContract() throws Exception {
+        String source = "interface Contract { void save(); }"
+                + " @lombok.Delegate(types = Runnable.class) class Example implements Contract {"
+                + " private Runnable task; }";
+
+        String rewritten = rewrite(source, UnimplementedMethodsRule.ID, UnimplementedMethodsRule::new);
+
+        assertTrue(rewritten.contains("public void save()"));
+    }
+
+    /**
+     * Verifies constructor-only Lombok annotations do not suppress unrelated method stubs.
+     *
+     * @throws Exception if parsing or applying an edit fails
+     */
+    @Test
+    void stillAddsContractsForConstructorOnlyLombokTypes() throws Exception {
+        String source = "interface Contract { void run(); }"
+                + " @lombok.NoArgsConstructor class Example implements Contract { }";
+
+        String rewritten = rewrite(source, UnimplementedMethodsRule.ID, UnimplementedMethodsRule::new);
+
+        assertTrue(rewritten.contains("public void run()"));
+    }
+
+    /**
      * Verifies aggregate missing annotations applies both supported annotation families.
      *
      * @throws Exception if parsing or applying an edit fails
@@ -150,7 +226,9 @@ class MissingCodeRulesTest {
             configuration.setOptions(java.util.List.of(option));
         }
         CleanupRule rule = factory.get();
-        assertTrue(rule.apply(compilationUnit, rewrite, configuration));
+        if (!rule.apply(compilationUnit, rewrite, configuration)) {
+            return source;
+        }
         IDocument document = new Document(source);
         TextEdit edits = rewrite.rewriteAST(document, Map.of());
         edits.apply(document);

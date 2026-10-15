@@ -168,6 +168,11 @@ public final class VariableDeclarationsFinalRule implements CleanupRule {
                 || Modifier.isVolatile(modifiers)
                 || Modifier.isTransient(modifiers)
                 || declaration.fragments().isEmpty()
+                || LombokSupport.hasAnyAnnotation(declaration)
+                || LombokSupport.hasAnyEnclosingTypeAnnotation(declaration)
+                || LombokSupport.hasAnyAnnotatedMember(declaration)
+                || LombokSupport.isExplicitlyNonFinal(declaration)
+                || LombokSupport.hasGeneratedSetter(declaration)
                 || findEnclosingType(declaration) == null) {
             return false;
         }
@@ -513,6 +518,9 @@ public final class VariableDeclarationsFinalRule implements CleanupRule {
             }
             if (unwrapped instanceof org.eclipse.jdt.core.dom.SuperFieldAccess superFieldAccess) {
                 return names.contains(superFieldAccess.getName().getIdentifier());
+            }
+            if (unwrapped instanceof org.eclipse.jdt.core.dom.QualifiedName qualifiedName) {
+                return names.contains(qualifiedName.getName().getIdentifier());
             }
             return false;
         }

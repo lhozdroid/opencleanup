@@ -29,20 +29,23 @@ import io.github.lhozdroid.opencleanup.rule.CleanupRuleRegistry;
         threadSafe = true)
 public final class OpenCleanupMojo extends AbstractMojo {
 
+    /** The Maven project whose source roots and encoding are used by the rewrite. */
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
+    /** The cleanup rules and groups selected for this execution. */
     @Parameter
     private List<RuleConfiguration> rules = new ArrayList<>();
 
-    @Parameter(property = "opencleanup.sourceRoots", defaultValue = "${project.basedir}/src/main/java")
+    /** Optional source roots; when omitted, Maven compile source roots are used. */
+    @Parameter(property = "opencleanup.sourceRoots")
     private List<String> sourceRoots;
 
     /**
      * Applies the enabled cleanup rules to the configured source roots.
      *
-     * <p>When {@code opencleanup.sourceRoots} is not configured, {@code src/main/java}
-     * is used.</p>
+     * <p>When {@code opencleanup.sourceRoots} is not configured, Maven compile source roots
+     * are used.</p>
      *
      * @throws MojoExecutionException if source rewriting fails or the configuration is invalid
      */
@@ -64,17 +67,29 @@ public final class OpenCleanupMojo extends AbstractMojo {
     /**
      * Resolves the source roots configured for this execution.
      *
-     * @return configured source roots, or {@code src/main/java} when none were configured
+     * @return configured source roots, or Maven compile source roots when none were configured
      */
     private List<Path> sourceRoots() {
-        List<String> configuredRoots = sourceRoots;
-        if (configuredRoots == null) {
-            configuredRoots = List.of("src/main/java");
+        if (sourceRoots == null || sourceRoots.isEmpty()) {
+            return project.getCompileSourceRoots().stream()
+                    .map(this::resolveSourceRoot)
+                    .toList();
         }
-        return configuredRoots.stream()
+        return sourceRoots.stream()
                 .filter(root -> root != null && !root.isBlank())
-                .map(Path::of)
+                .map(this::resolveSourceRoot)
                 .toList();
+    }
+
+    /**
+     * Resolves a source-root path against the Maven project directory when it is relative.
+     *
+     * @param root the configured or Maven-provided source-root path
+     * @return an absolute source-root path
+     */
+    private Path resolveSourceRoot(String root) {
+        Path path = Path.of(root);
+        return path.isAbsolute() ? path : project.getBasedir().toPath().resolve(path);
     }
 
     /**

@@ -67,7 +67,11 @@ public final class BufferToBuilderRule implements CleanupRule {
              */
             @Override
             public boolean visit(FieldDeclaration node) {
-                if (replaceable(node.getType(), node.fragments())) {
+                if (!LombokSupport.hasAnyAnnotation(node)
+                        && !LombokSupport.hasAnyEnclosingTypeAnnotation(node)
+                        && !LombokSupport.hasAnyAnnotatedMember(node)
+                        && !LombokSupport.isManagedField(node)
+                        && replaceable(node.getType(), node.fragments())) {
                     replace(node.getAST(), node.getType(), node.fragments(), rewrite);
                     changed[0] = true;
                 }

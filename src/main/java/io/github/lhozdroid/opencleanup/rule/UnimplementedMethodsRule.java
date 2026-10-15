@@ -92,7 +92,9 @@ public final class UnimplementedMethodsRule implements CleanupRule {
         for (AbstractTypeDeclaration parent : MissingCodeSupport.directParents(type, types)) {
             collectContracts(parent, types, required, new HashSet<>());
         }
-        return required;
+        return required.stream()
+                .filter(method -> !LombokSupport.mayGenerateMethod(type, method))
+                .toList();
     }
 
     /**

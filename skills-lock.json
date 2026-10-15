@@ -30,6 +30,18 @@
       "sourceType": "github",
       "skillPath": "skills/java-docs/SKILL.md",
       "computedHash": "76cf49efcd6e99d95031c78e56615dbaf641a756e852acf7e87f9197dfab43e0"
+    },
+    "lombok-patterns": {
+      "source": "emvnuel/skills",
+      "sourceType": "github",
+      "skillPath": "lombok-patterns/SKILL.md",
+      "computedHash": "b58ebd7b5776a89b14086b3959e031b849b061135266017af81229c145db4b56"
+    },
+    "readme-blueprint-generator": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/readme-blueprint-generator/SKILL.md",
+      "computedHash": "e2c7dabf2e455794260f1516e2ceda6a82dc92a409578cc184fcb0f45bddca54"
     }
   }
 }

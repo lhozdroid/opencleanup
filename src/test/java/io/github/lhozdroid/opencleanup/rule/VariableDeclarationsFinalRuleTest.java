@@ -95,6 +95,45 @@ class VariableDeclarationsFinalRuleTest {
     }
 
     /**
+     * Verifies that a Lombok-generated setter is not removed by adding final to its field.
+     *
+     * @throws Exception if AST edits cannot be applied
+     */
+    @Test
+    void preservesLombokSetterFields() throws Exception {
+        String source = """
+                import lombok.Data;
+
+                @Data
+                class Example {
+                    private String name = "initial";
+                }
+                """;
+
+        String rewritten = rewrite(source, VariableDeclarationsFinalRule.FIELDS);
+
+        assertTrue(rewritten.contains("private String name = \"initial\";"));
+        assertFalse(rewritten.contains("private final String name"));
+    }
+
+    /**
+     * Verifies Lombok's field-level and type-level non-final contracts are preserved.
+     *
+     * @throws Exception if AST edits cannot be applied
+     */
+    @Test
+    void preservesLombokNonFinalFields() throws Exception {
+        String source = "import lombok.Value; import lombok.experimental.NonFinal;"
+                + " @Value class FieldExample { @NonFinal private String value = \"field\"; }"
+                + " @NonFinal @Value class TypeExample { private String value = \"type\"; }";
+
+        String rewritten = rewrite(source, VariableDeclarationsFinalRule.FIELDS);
+
+        assertTrue(rewritten.contains("private String value = \"field\";"));
+        assertTrue(rewritten.contains("private String value = \"type\";"));
+    }
+
+    /**
      * Verifies that written declarations and unsupported field shapes remain unchanged.
      *
      * @throws Exception if AST edits cannot be applied
@@ -137,6 +176,22 @@ class VariableDeclarationsFinalRuleTest {
         assertFalse(rewritten.contains("final int writtenLocal"));
         assertFalse(rewritten.contains("final boolean parameter"));
         assertFalse(rewritten.contains("final int index"));
+    }
+
+    /**
+     * Verifies writes through a qualified field target prevent an invalid final modifier.
+     *
+     * @throws Exception if AST edits cannot be applied
+     */
+    @Test
+    void preservesFieldsWrittenThroughQualifiedNames() throws Exception {
+        String source = "class Example { private int value = 1;"
+                + " void reset(Example other) { other.value = 2; } }";
+
+        String rewritten = rewrite(source, VariableDeclarationsFinalRule.FIELDS);
+
+        assertTrue(rewritten.contains("private int value = 1;"));
+        assertFalse(rewritten.contains("private final int value"));
     }
 
     /**

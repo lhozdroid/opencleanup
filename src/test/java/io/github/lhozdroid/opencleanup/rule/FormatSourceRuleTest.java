@@ -3,7 +3,12 @@ package io.github.lhozdroid.opencleanup.rule;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
+
+import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
+import io.github.lhozdroid.opencleanup.config.RuleOption;
 
 /**
  * Tests whole-source formatting through the Eclipse JDT formatter.
@@ -87,5 +92,51 @@ class FormatSourceRuleTest {
         assertTrue(formatted.contains("record Local(int value) {"));
         assertTrue(formatted.contains("\"\"\""));
         assertEquals(formatted, new FormatSourceRule().apply(formatted, null));
+    }
+
+    /**
+     * Verifies comment wrapping can use a different width from ordinary source lines.
+     */
+    @Test
+    void supportsIndependentCommentLineLength() {
+        String source = "/** This comment contains enough words to require wrapping when the comment width is small. */\n"
+                + "class Example { int value; }\n";
+        RuleOption commentLength = new RuleOption();
+        commentLength.setName("comment-line-length");
+        commentLength.setValue("40");
+        RuleConfiguration configuration = new RuleConfiguration();
+        configuration.setOptions(List.of(commentLength));
+
+        String formatted = new FormatSourceRule().apply(source, configuration);
+
+        assertTrue(formatted.lines()
+                .filter(line -> line.trim().startsWith("*") || line.trim().startsWith("/**"))
+                .allMatch(line -> line.length() <= 40));
+        assertTrue(formatted.contains("class Example {"));
+    }
+
+    /**
+     * Verifies malformed formatter widths leave the original source untouched.
+     */
+    @Test
+    void rejectsInvalidFormatterWidths() {
+        String source = "class Example{void run(){int value=1;}}";
+        RuleOption commentLength = new RuleOption();
+        commentLength.setName("comment-line-length");
+        commentLength.setValue("-1");
+        RuleConfiguration configuration = new RuleConfiguration();
+        configuration.setOptions(List.of(commentLength));
+
+        assertEquals(source, new FormatSourceRule().apply(source, configuration));
+    }
+
+    /**
+     * Verifies malformed Java is preserved by the source formatter.
+     */
+    @Test
+    void preservesMalformedSource() {
+        String source = "class Example { void run( { int value = 1; }";
+
+        assertEquals(source, new FormatSourceRule().apply(source, null));
     }
 }

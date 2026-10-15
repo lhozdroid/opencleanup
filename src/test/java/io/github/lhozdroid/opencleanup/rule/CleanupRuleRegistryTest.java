@@ -79,6 +79,56 @@ class CleanupRuleRegistryTest {
     }
 
     /**
+     * Verifies false-valued source options do not accidentally select source rules.
+     */
+    @Test
+    void ignoresDisabledSourceOptionsInCodeOrganizingGroup() {
+        RuleConfiguration codeOrganizing = new RuleConfiguration();
+        codeOrganizing.setId("code-organizing");
+        codeOrganizing.setOptions(List.of(
+                option(FormatSourceRule.ID, "false"),
+                option(TrailingWhitespaceRule.ID, "false"),
+                option(IndentationRule.ID, "false")));
+
+        assertEquals(
+                List.of(),
+                new CleanupRuleRegistry().resolveSourceRules(List.of(codeOrganizing)));
+    }
+
+    /**
+     * Verifies unsupported trailing-whitespace selectors and modes do not enable cleanup.
+     */
+    @Test
+    void ignoresInvalidTrailingWhitespaceOptions() {
+        RuleConfiguration codeOrganizing = new RuleConfiguration();
+        codeOrganizing.setId("code-organizing");
+        codeOrganizing.setOptions(List.of(
+                option(TrailingWhitespaceRule.ID, "garbage"),
+                option("mode", "garbage")));
+
+        assertEquals(
+                List.of(),
+                new CleanupRuleRegistry().resolveSourceRules(List.of(codeOrganizing)));
+    }
+
+    /**
+     * Verifies the documented mode-only selection enables trailing-whitespace cleanup.
+     */
+    @Test
+    void resolvesTrailingWhitespaceModeWithoutSelector() {
+        RuleConfiguration codeOrganizing = new RuleConfiguration();
+        codeOrganizing.setId("code-organizing");
+        codeOrganizing.setOptions(List.of(option("mode", "ignore-empty-lines")));
+
+        assertEquals(
+                List.of(TrailingWhitespaceRule.ID),
+                new CleanupRuleRegistry().resolveSourceRules(List.of(codeOrganizing))
+                        .stream()
+                        .map(configured -> configured.rule().id())
+                        .toList());
+    }
+
+    /**
      * Verifies that the full documented catalog is present in the AST and source rule registries.
      *
      * @throws ReflectiveOperationException if the registry fields cannot be inspected
@@ -103,13 +153,23 @@ class CleanupRuleRegistryTest {
      * @return the configured rule group
      */
     private RuleConfiguration configuration(String groupId, String ruleId) {
-        RuleOption option = new RuleOption();
-        option.setName(ruleId);
-        option.setValue("true");
-
         RuleConfiguration configuration = new RuleConfiguration();
         configuration.setId(groupId);
-        configuration.setOptions(List.of(option));
+        configuration.setOptions(List.of(option(ruleId, "true")));
         return configuration;
+    }
+
+    /**
+     * Creates one named rule option.
+     *
+     * @param name the option name
+     * @param value the option value
+     * @return the configured option
+     */
+    private RuleOption option(String name, String value) {
+        RuleOption option = new RuleOption();
+        option.setName(name);
+        option.setValue(value);
+        return option;
     }
 }

@@ -5,6 +5,9 @@ import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,6 +23,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.compiler.IProblem;
 
 import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
 import io.github.lhozdroid.opencleanup.rule.CleanupRuleRegistry;
@@ -103,6 +107,9 @@ public final class JavaSourceRewriter {
                 }
             }
             CompilationUnit compilationUnit = parse(source);
+            if (hasSyntaxErrors(compilationUnit)) {
+                return;
+            }
             ASTRewrite rewrite = ASTRewrite.create(compilationUnit.getAST());
 
             for (CleanupRuleRegistry.ConfiguredRule configuredRule : configuredRules) {
@@ -119,11 +126,14 @@ public final class JavaSourceRewriter {
             TextEdit edits = rewrite.rewriteAST(document, Map.of());
             edits.apply(document);
             String rewrittenSource = document.get();
+            if (hasSyntaxErrors(parse(rewrittenSource))) {
+                return;
+            }
             if (originalSource.equals(rewrittenSource)) {
                 return;
             }
 
-            Files.writeString(path, rewrittenSource, charset);
+            writeAtomically(path, rewrittenSource, charset);
             state.filesChanged++;
             state.changedFiles.add(path);
             state.appliedRules.addAll(appliedRules);
@@ -152,6 +162,60 @@ public final class JavaSourceRewriter {
         parser.setBindingsRecovery(true);
         parser.setCompilerOptions(SourceRewriteSupport.javaSourceOptions());
         return (CompilationUnit) parser.createAST(null);
+    }
+
+    /**
+     * Checks whether parsing reported a syntax error that makes AST cleanup unsafe.
+     *
+     * @param compilationUnit the parsed source unit
+     * @return {@code true} when at least one parser error was reported
+     */
+    private boolean hasSyntaxErrors(CompilationUnit compilationUnit) {
+        for (IProblem problem : compilationUnit.getProblems()) {
+            if (problem.isError()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Writes rewritten source through a same-directory temporary file.
+     *
+     * @param path the destination source file
+     * @param source the rewritten source text
+     * @param charset the source charset
+     * @throws IOException if the temporary file or replacement move fails
+     */
+    private void writeAtomically(Path path, String source, Charset charset) throws IOException {
+        Path absolutePath = path.toAbsolutePath();
+        Set<PosixFilePermission> originalPermissions = null;
+        try {
+            originalPermissions = Files.getPosixFilePermissions(absolutePath);
+        } catch (UnsupportedOperationException exception) {
+            // The current filesystem does not expose POSIX permissions.
+        }
+        Path temporary = Files.createTempFile(
+                absolutePath.getParent(),
+                "." + absolutePath.getFileName() + ".",
+                ".opencleanup.tmp");
+        try {
+            if (originalPermissions != null) {
+                Files.setPosixFilePermissions(temporary, originalPermissions);
+            }
+            Files.writeString(temporary, source, charset);
+            try {
+                Files.move(
+                        temporary,
+                        absolutePath,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException exception) {
+                Files.move(temporary, absolutePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temporary);
+        }
     }
 
     /**

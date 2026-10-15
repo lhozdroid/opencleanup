@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +15,17 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import io.github.lhozdroid.opencleanup.config.RuleConfiguration;
 import io.github.lhozdroid.opencleanup.rule.CleanupRuleRegistry;
 import io.github.lhozdroid.opencleanup.rule.TrailingWhitespaceRule;
+import io.github.lhozdroid.opencleanup.rule.UnusedPrivateMembersRule;
 
 /** Tests the complete source-level rewrite pipeline. */
 class JavaSourceRewriterTest {
@@ -47,6 +53,119 @@ class JavaSourceRewriterTest {
         assertEquals("class Example {\n}\n", Files.readString(sourceFile, StandardCharsets.UTF_8));
         assertEquals(1, report.getFilesChanged());
         assertTrue(report.getAppliedRules().contains(TrailingWhitespaceRule.ID));
+    }
+
+    /**
+     * Verifies atomic replacement preserves POSIX permissions on rewritten source files.
+     *
+     * @throws Exception if the temporary source cannot be read or written
+     */
+    @Test
+    void preservesPosixPermissionsOnRewrite() throws Exception {
+        Path sourceFile = temporaryDirectory.resolve("Permissions.java");
+        Files.writeString(sourceFile, "class Permissions {  \n}\n", StandardCharsets.UTF_8);
+        java.util.Set<PosixFilePermission> permissions;
+        try {
+            permissions = Files.getPosixFilePermissions(sourceFile);
+        } catch (UnsupportedOperationException exception) {
+            return;
+        }
+
+        RuleConfiguration configuration = new RuleConfiguration();
+        configuration.setId(TrailingWhitespaceRule.ID);
+        new JavaSourceRewriter(new CleanupRuleRegistry())
+                .rewrite(List.of(temporaryDirectory), StandardCharsets.UTF_8, List.of(configuration));
+
+        assertEquals(permissions, Files.getPosixFilePermissions(sourceFile));
+    }
+
+    /**
+     * Verifies malformed source is not destructively rewritten through recovery AST nodes.
+     *
+     * @throws Exception if the temporary source cannot be read or written
+     */
+    @Test
+    void skipsMalformedSource() throws Exception {
+        Path sourceFile = temporaryDirectory.resolve("Malformed.java");
+        String source = "class Malformed { private int unused;";
+        Files.writeString(sourceFile, source, StandardCharsets.UTF_8);
+
+        RuleConfiguration configuration = new RuleConfiguration();
+        configuration.setId(UnusedPrivateMembersRule.ID);
+
+        RewriteReport report = new JavaSourceRewriter(new CleanupRuleRegistry())
+                .rewrite(List.of(temporaryDirectory), StandardCharsets.UTF_8, List.of(configuration));
+
+        assertEquals(source, Files.readString(sourceFile, StandardCharsets.UTF_8));
+        assertEquals(0, report.getFilesChanged());
+    }
+
+    /**
+     * Verifies that a rewritten Lombok source still compiles against its generated setter API.
+     *
+     * @throws Exception if the temporary source cannot be rewritten or compiled
+     */
+    @Test
+    void preservesCompilableLombokGeneratedApi() throws Exception {
+        Path example = temporaryDirectory.resolve("Example.java");
+        Path usage = temporaryDirectory.resolve("Usage.java");
+        Files.writeString(example, "import lombok.Data; @Data class Example {"
+                + " private String name; }", StandardCharsets.UTF_8);
+        Files.writeString(usage, "class Usage { void update(Example example) {"
+                + " example.setName(\"updated\"); } }", StandardCharsets.UTF_8);
+
+        RuleConfiguration configuration = new RuleConfiguration();
+        configuration.setId(UnusedPrivateMembersRule.ID);
+        new JavaSourceRewriter(new CleanupRuleRegistry())
+                .rewrite(List.of(temporaryDirectory), StandardCharsets.UTF_8, List.of(configuration));
+
+        assertTrue(Files.readString(example, StandardCharsets.UTF_8)
+                .contains("private String name;"));
+        assertCompiles(List.of(example, usage), temporaryDirectory.resolve("compiled"));
+    }
+
+    /**
+     * Compiles source files with the current test class path and annotation processors.
+     *
+     * @param sourceFiles Java source files to compile
+     * @param outputDirectory destination for compiled classes
+     * @throws Exception if the compiler is unavailable or compilation fails
+     */
+    private void assertCompiles(List<Path> sourceFiles, Path outputDirectory) throws Exception {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            throw new IllegalStateException("A JDK compiler is required for this test");
+        }
+        Files.createDirectories(outputDirectory);
+        try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
+            Iterable compilationUnits = fileManager.getJavaFileObjectsFromFiles(
+                    sourceFiles.stream().map(Path::toFile).toList());
+            String compilerClassPath = classPathWithLombok();
+            List<String> options = List.of(
+                    "-d", outputDirectory.toString(),
+                    "-classpath", compilerClassPath,
+                    "-processorpath", compilerClassPath);
+            boolean compiled = compiler.getTask(null, fileManager, null, options, null, compilationUnits)
+                    .call();
+            assertTrue(compiled, "Lombok-generated API source did not compile");
+        }
+    }
+
+    /**
+     * Resolves a compiler class path that includes the provided Lombok jar.
+     *
+     * @return the current test class path plus Lombok
+     * @throws Exception if Lombok cannot be located
+     */
+    private String classPathWithLombok() throws Exception {
+        Path lombokLocation = Path.of(Class.forName("lombok.Data")
+                .getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI());
+        return System.getProperty("java.class.path")
+                + System.getProperty("path.separator")
+                + lombokLocation;
     }
 
     /**

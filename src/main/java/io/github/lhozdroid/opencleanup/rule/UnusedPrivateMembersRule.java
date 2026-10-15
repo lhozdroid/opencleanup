@@ -1,6 +1,8 @@
 package io.github.lhozdroid.opencleanup.rule;
 
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -10,7 +12,14 @@ import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodReference;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -65,21 +74,31 @@ public final class UnusedPrivateMembersRule implements CleanupRule {
              */
             @Override
             public boolean visit(FieldDeclaration node) {
-                if (!Modifier.isPrivate(node.getModifiers())) {
+                if (!Modifier.isPrivate(node.getModifiers())
+                        || LombokSupport.hasAnyAnnotation(node)
+                        || LombokSupport.hasAnyEnclosingTypeAnnotation(node)
+                        || LombokSupport.hasAnyAnnotatedMember(node)
+                        || LombokSupport.isManagedField(node)) {
                     return true;
                 }
                 ListRewrite fragments = rewrite.getListRewrite(
                         node, FieldDeclaration.FRAGMENTS_PROPERTY);
+                List<VariableDeclarationFragment> removable = new ArrayList<>();
                 for (Object value : node.fragments()) {
                     VariableDeclarationFragment fragment = (VariableDeclarationFragment) value;
-                    if (referenceCount(compilationUnit, fragment.getName()) == 0) {
-                        if (node.fragments().size() == 1) {
-                            rewrite.remove(node, null);
-                            removed.add(node);
-                        } else {
-                            fragments.remove(fragment, null);
-                            removed.add(fragment);
-                        }
+                    if (referenceCount(compilationUnit, fragment.getName()) == 0
+                            && safeToRemoveInitializer(fragment.getInitializer())) {
+                        removable.add(fragment);
+                    }
+                }
+                if (removable.size() == node.fragments().size()) {
+                    rewrite.remove(node, null);
+                    removed.add(node);
+                    changed[0] = true;
+                } else {
+                    for (VariableDeclarationFragment fragment : removable) {
+                        fragments.remove(fragment, null);
+                        removed.add(fragment);
                         changed[0] = true;
                     }
                 }
@@ -95,7 +114,10 @@ public final class UnusedPrivateMembersRule implements CleanupRule {
              */
             @Override
             public boolean visit(MethodDeclaration node) {
-                if (!Modifier.isPrivate(node.getModifiers())) {
+                if (!Modifier.isPrivate(node.getModifiers())
+                        || LombokSupport.hasAnyAnnotation(node)
+                        || LombokSupport.hasAnyEnclosingTypeAnnotation(node)
+                        || LombokSupport.isManagedMethod(node)) {
                     return true;
                 }
                 if (referenceCount(compilationUnit, node.getName()) == 0) {
@@ -129,6 +151,7 @@ public final class UnusedPrivateMembersRule implements CleanupRule {
                 if (node instanceof AbstractTypeDeclaration declaration
                         && node.getParent() instanceof BodyDeclaration
                         && Modifier.isPrivate(declaration.getModifiers())
+                        && !LombokSupport.hasAnyAnnotation(declaration)
                         && referenceCount(compilationUnit, declaration.getName()) == 0) {
                     rewrite.remove(declaration, null);
                     removed.add(declaration);
@@ -139,6 +162,21 @@ public final class UnusedPrivateMembersRule implements CleanupRule {
             }
         });
         return changed[0] && !removed.isEmpty();
+    }
+
+    /**
+     * Checks whether removing a field initializer is limited to a compile-time literal.
+     *
+     * @param initializer the field initializer, possibly {@code null}
+     * @return {@code true} when removing the initializer cannot discard executable behavior
+     */
+    private boolean safeToRemoveInitializer(Expression initializer) {
+        return initializer == null
+                || initializer instanceof NumberLiteral
+                || initializer instanceof StringLiteral
+                || initializer instanceof BooleanLiteral
+                || initializer instanceof CharacterLiteral
+                || initializer instanceof NullLiteral;
     }
 
     /**
@@ -187,12 +225,32 @@ public final class UnusedPrivateMembersRule implements CleanupRule {
             @Override
             public boolean visit(SimpleName node) {
                 if (node != methodName && node.getIdentifier().equals(methodName.getIdentifier())
-                        && node.getParent() instanceof org.eclipse.jdt.core.dom.MethodInvocation invocation
-                        && invocation.getName() == node) {
+                        && isInvocationOrMethodReference(node)) {
                     found[0] = true;
                     return false;
                 }
                 return true;
+            }
+
+            /**
+             * Checks whether a simple name is a call or method-reference target.
+             *
+             * @param node the candidate method name
+             * @return {@code true} when the name is invoked or referenced
+             */
+            private boolean isInvocationOrMethodReference(SimpleName node) {
+                if (node.getParent() instanceof org.eclipse.jdt.core.dom.MethodInvocation invocation) {
+                    return invocation.getName() == node;
+                }
+                if (!(node.getParent() instanceof MethodReference reference)) {
+                    return false;
+                }
+                return reference instanceof org.eclipse.jdt.core.dom.ExpressionMethodReference expression
+                        && expression.getName() == node
+                        || reference instanceof org.eclipse.jdt.core.dom.TypeMethodReference type
+                        && type.getName() == node
+                        || reference instanceof org.eclipse.jdt.core.dom.SuperMethodReference superReference
+                        && superReference.getName() == node;
             }
         });
         return found[0];
