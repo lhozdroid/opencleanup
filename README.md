@@ -101,7 +101,7 @@ When the plugin is declared in the project's `<build><plugins>` section, the sho
 - Java 21 or newer to run and build the plugin.
 - Maven 3.9.11 or newer.
 - A Maven project, because the goal requires an injected `MavenProject`.
-- Java source files located under Maven compile source roots.
+- Java source files located under Maven compile source roots, or under the explicitly configured source roots.
 
 Build and verify the plugin from this repository with:
 
@@ -253,13 +253,13 @@ The nine group pages enumerate all 103 stable rule IDs and the supported option 
 The `rewrite` goal:
 
 1. requires a Maven project;
-2. reads the project's compile source roots from `MavenProject#getCompileSourceRoots()`;
+2. reads the configured source roots, defaulting to `src/main/java`;
 3. recursively visits regular files whose names end in `.java`;
 4. applies selected source-text rules, such as formatting, then selected AST rules;
 5. writes a file only when the final text differs from the original; and
 6. logs the number of visited and changed Java files plus the rule IDs that changed at least one file.
 
-The plugin currently has no include, exclude, test-source, generated-source, dry-run, backup, or output-directory parameters. Test source roots are not processed unless they are also compile source roots. Non-Java files are ignored.
+The optional `opencleanup.sourceRoots` property selects the source folders to process as a comma-separated list. For example, `-Dopencleanup.sourceRoots=src/main/java,src/test/java` processes both production and test sources. If the property is omitted, only `src/main/java` is processed. Non-Java files are ignored.
 
 The goal runs in `process-sources`, before compilation. Rewrites happen in place, so run the goal on a clean working tree or review the resulting diff immediately after execution.
 

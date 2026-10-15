@@ -356,4 +356,4 @@ Enable selected rules instead:
 </rules>
 ```
 
-The plugin processes Java files in the configured compile source roots. It writes a file only when at least one selected rule schedules a valid replacement. Parsing failures, unsupported syntax, comments that could be displaced, and uncertain control-flow cases are left unchanged; they are not guessed at or forcefully rewritten.
+The plugin processes Java files in the configured source roots, defaulting to `src/main/java`. It writes a file only when at least one selected rule schedules a valid replacement. Parsing failures, unsupported syntax, comments that could be displaced, and uncertain control-flow cases are left unchanged; they are not guessed at or forcefully rewritten.

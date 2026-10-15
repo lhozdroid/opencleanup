@@ -630,7 +630,7 @@ method reference when the direct parameter mapping cannot be proven.
 ## Safety summary
 
 Code-style rules are deterministic and opt-in. They inspect Java source under
-the Maven project's compile source roots and apply only the selected rule
+the configured source roots and apply only the selected rule
 implementations. AST rewrites preserve the surrounding source structure as
 far as the candidate permits; rules that move statements explicitly reject
 comments, declarations, or control transfers when moving them could alter

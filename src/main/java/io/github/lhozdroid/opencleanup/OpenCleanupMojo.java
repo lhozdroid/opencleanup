@@ -35,8 +35,14 @@ public final class OpenCleanupMojo extends AbstractMojo {
     @Parameter
     private List<RuleConfiguration> rules = new ArrayList<>();
 
+    @Parameter(property = "opencleanup.sourceRoots", defaultValue = "${project.basedir}/src/main/java")
+    private List<String> sourceRoots;
+
     /**
-     * Applies the enabled cleanup rules to the project's compile source roots.
+     * Applies the enabled cleanup rules to the configured source roots.
+     *
+     * <p>When {@code opencleanup.sourceRoots} is not configured, {@code src/main/java}
+     * is used.</p>
      *
      * @throws MojoExecutionException if source rewriting fails or the configuration is invalid
      */
@@ -44,10 +50,7 @@ public final class OpenCleanupMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         try {
             JavaSourceRewriter rewriter = new JavaSourceRewriter(new CleanupRuleRegistry());
-            List<Path> sourceRoots = project.getCompileSourceRoots().stream()
-                    .map(Path::of)
-                    .toList();
-            RewriteReport report = rewriter.rewrite(sourceRoots, sourceCharset(), rules);
+            RewriteReport report = rewriter.rewrite(sourceRoots(), sourceCharset(), rules);
             getLog().info("OpenCleanup visited " + report.getFilesVisited()
                     + " Java files and changed " + report.getFilesChanged() + ".");
             if (!report.getAppliedRules().isEmpty()) {
@@ -56,6 +59,22 @@ public final class OpenCleanupMojo extends AbstractMojo {
         } catch (RewriteException | java.io.IOException | IllegalArgumentException exception) {
             throw new MojoExecutionException("OpenCleanup could not rewrite the project sources.", exception);
         }
+    }
+
+    /**
+     * Resolves the source roots configured for this execution.
+     *
+     * @return configured source roots, or {@code src/main/java} when none were configured
+     */
+    private List<Path> sourceRoots() {
+        List<String> configuredRoots = sourceRoots;
+        if (configuredRoots == null) {
+            configuredRoots = List.of("src/main/java");
+        }
+        return configuredRoots.stream()
+                .filter(root -> root != null && !root.isBlank())
+                .map(Path::of)
+                .toList();
     }
 
     /**

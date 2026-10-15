@@ -5,7 +5,7 @@
       "source": "jabrena/plinth",
       "sourceType": "github",
       "skillPath": "skills/112-java-maven-plugins/SKILL.md",
-      "computedHash": "0acfd740ee641a7fa73efb684a8263557ac38339e80e09a150864ab9f0fd01d1"
+      "computedHash": "23f68174df08ea2e915b1d4e6cba7d6bd17fc6bbe2156f84e63825208f518fae"
     },
     "java-code-review": {
       "source": "decebals/claude-code-java",

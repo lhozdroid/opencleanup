@@ -1,7 +1,7 @@
 # Code-organizing rules
 
 Code-organizing rules make source layout predictable. They operate on the Java files in the
-project's compile source roots and write a file only when the resulting text is different from the
+configured source roots and write a file only when the resulting text is different from the
 original. The rules are opt-in and can be selected individually or through the `code-organizing`
 group.
 

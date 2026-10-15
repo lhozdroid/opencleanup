@@ -1,6 +1,6 @@
 # Maven configuration
 
-This page is the authoritative guide to configuring the OpenCleanup Maven plugin. The plugin exposes one goal, `rewrite`, and one user-configurable parameter, `rules`.
+This page is the authoritative guide to configuring the OpenCleanup Maven plugin. The plugin exposes one goal, `rewrite`, and the user-configurable parameters `rules` and `sourceRoots`.
 
 The released plugin is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.2). Maven projects can use it directly without adding a repository or installing the plugin locally.
 
@@ -68,6 +68,19 @@ Rules are opt-in. This configuration enables one direct rule:
 ```
 
 An empty or omitted `rules` list selects nothing and leaves source files unchanged.
+
+## Source roots
+
+By default, the plugin processes `src/main/java`. Set
+`opencleanup.sourceRoots` to a comma-separated list when other folders should be included:
+
+```bash
+mvn opencleanup:rewrite -Dopencleanup.sourceRoots=src/main/java,src/test/java
+```
+
+The property replaces the default source root for that execution. Paths may be absolute
+or relative to the Maven project directory. Only regular `.java` files below the selected folders
+are processed.
 
 ## Exact XML model
 
