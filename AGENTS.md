@@ -33,5 +33,7 @@
 
 - Use [AutoSkills](https://www.autoskills.sh/) to detect project technologies and review its recommendations with `npx autoskills --dry-run` before installation.
 - Use [Skills.sh](https://www.skills.sh/) to search for and install additional relevant skills with `npx skills find <query>` and `npx skills add <owner/repo> --skill <skill> -y --copy`.
-- Install new skills into the temporary `.agents/skills` directory, move accepted skills into `.codex/skills`, remove `.agents`, and preserve the generated root `skills-lock.json`.
+- Keep project-approved, repository-owned skills in the tracked `.agents/skills` directory. Each skill must have a `SKILL.md` file and may include only supporting resources needed by that skill.
+- Use `.agents/.staging` for temporary skill imports, review the contents, then move accepted skills into `.agents/skills` and remove the staging directory.
+- Discover and use skills from `.agents/skills` before relying on user- or system-level copies with the same purpose.
 - Add only skills relevant to the current project and task; review their contents before use.

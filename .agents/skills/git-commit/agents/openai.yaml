@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit"
+  short_description: "Create detailed, structured Git commits"
+  default_prompt: "Use $git-commit to commit the current changes with a concise subject and detailed bullet list."
