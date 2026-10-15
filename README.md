@@ -30,7 +30,7 @@ solution, I decided to build one that works directly in the Maven build.
 
 ## Quick start
 
-The current release is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.2). Add the plugin to the Maven project that should be rewritten; no repository declaration or local installation is required.
+The current release is available from [Maven Central](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin/1.1.3). Add the plugin to the Maven project that should be rewritten; no repository declaration or local installation is required.
 
 ## Maven Central
 
@@ -39,7 +39,7 @@ The published coordinates are:
 ```xml
 <groupId>io.github.lhozdroid</groupId>
 <artifactId>opencleanup-maven-plugin</artifactId>
-<version>1.1.2</version>
+<version>1.1.3</version>
 ```
 
 Add the plugin to the project that should be rewritten. Maven plugin configuration uses nested elements, so rule properties must be written as `<id>`, `<enabled>`, and `<options>` elements rather than XML attributes.
@@ -50,7 +50,7 @@ Add the plugin to the project that should be rewritten. Maven plugin configurati
     <plugin>
       <groupId>io.github.lhozdroid</groupId>
       <artifactId>opencleanup-maven-plugin</artifactId>
-      <version>1.1.2</version>
+      <version>1.1.3</version>
       <executions>
         <execution>
           <id>opencleanup-rewrite</id>
@@ -91,7 +91,7 @@ mvn process-sources
 For a one-time explicit invocation, use:
 
 ```bash
-mvn io.github.lhozdroid:opencleanup-maven-plugin:1.1.2:rewrite
+mvn io.github.lhozdroid:opencleanup-maven-plugin:1.1.3:rewrite
 ```
 
 When the plugin is declared in the project's `<build><plugins>` section, the shorter `mvn opencleanup:rewrite` form can also be used. Maven resolves the plugin from Maven Central automatically.
@@ -280,8 +280,8 @@ The goal runs in `process-sources`, before compilation. Rewrites happen in place
 The project is licensed under the [MIT License](LICENSE). Maven Central
 release configuration is documented in [Publishing OpenCleanup](docs/publishing.md).
 
-Version `1.1.2` is already published as
-`io.github.lhozdroid:opencleanup-maven-plugin:1.1.2` and can be used directly
+Version `1.1.3` is already published as
+`io.github.lhozdroid:opencleanup-maven-plugin:1.1.3` and can be used directly
 from Maven Central.
 
 The release workflow publishes a GitHub release through Maven Central after

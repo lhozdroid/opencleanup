@@ -7,7 +7,7 @@ The complete documented catalog has concrete, conservative implementations. Rule
 ## Use from Maven Central
 
 The released plugin is available from Maven Central as
-`io.github.lhozdroid:opencleanup-maven-plugin:1.1.2`. Add it to the
+`io.github.lhozdroid:opencleanup-maven-plugin:1.1.3`. Add it to the
 `<build><plugins>` section of a Maven project and Maven will resolve it
 automatically; no repository declaration or `mvn install` is needed. See the
 [Maven configuration guide](configuration.md) for the complete setup.

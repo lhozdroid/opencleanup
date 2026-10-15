@@ -2,6 +2,11 @@
 
 All notable changes to OpenCleanup are documented in this file.
 
+## [1.1.3] - 2026-10-14
+
+- Add configurable source roots with `src/main/java` as the default.
+- Document processing additional folders such as test sources.
+
 ## [1.1.2] - 2026-10-12
 
 ### Fixed
