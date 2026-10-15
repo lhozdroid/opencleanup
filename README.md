@@ -1,6 +1,8 @@
 # OpenCleanup Maven Plugin
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.lhozdroid/opencleanup-maven-plugin?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.lhozdroid/opencleanup-maven-plugin)
+[![Latest release](https://img.shields.io/github/v/release/lhozdroid/opencleanup?display_name=tag&sort=semver)](https://github.com/lhozdroid/opencleanup/releases)
+[![Publish Maven plugin](https://github.com/lhozdroid/opencleanup/actions/workflows/publish.yml/badge.svg)](https://github.com/lhozdroid/opencleanup/actions/workflows/publish.yml)
 [![Java 21+](https://img.shields.io/badge/Java-21%2B-ED8B00)](https://www.oracle.com/java/technologies/javase/21-overview.html)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -44,6 +46,7 @@ consistently across local builds and automation.
 - [Execution and source scope](#execution-and-source-scope)
 - [Rewrite behavior and safety](#rewrite-behavior-and-safety)
 - [Publishing](#publishing)
+- [Security](SECURITY.md)
 - [Documentation](#documentation)
 
 ## Compatibility
